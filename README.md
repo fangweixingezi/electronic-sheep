@@ -8,6 +8,9 @@
 >
 > 🐕 **牧羊犬守护，确保规则被执行**  
 > _Shepherd Dog guards, ensuring rules are followed_
+>
+> # 😎 快来薅！
+> # Come to how!
 
 ---
 

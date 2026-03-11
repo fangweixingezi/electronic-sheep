@@ -392,5 +392,8 @@ _Electronic Sheep - Think like a human, remember like a human._
 _牧羊犬 - 时刻守护，确保规则被执行。_  
 _Shepherd Dog - Always guarding, ensuring rules are followed._
 
+# 😎 快来薅！
+# Come to how!
+
 _宁夏未必科幻文化有限公司，一帆原创制作。_  
 _Ningxia Not Necessarily Science Fiction Culture Co., Ltd., Yifan Original._
