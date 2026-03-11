@@ -26,3 +26,7 @@
 ## 自动防护
 
 安装电子羊技能后，所有安全功能自动启用！
+
+---
+
+![公众号二维码](https://sns-webpic-qc.xhscdn.com/202603111536/6e9ef4ca9220551f3fcfd45111b58438/notes_pre_post/1040g3k031tiknskm68005opopjh6br36ieu40pg!nd_dft_wgth_webp_3)
