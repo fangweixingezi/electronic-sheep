@@ -39,6 +39,7 @@ show_help() {
   shepherd-harden                  - 安全加固 / Security hardening
   shepherd-herd                    - 赶羊入圈 / Herd keys to secure storage ⭐
   shepherd-score                   - 安全评分 / Security score ⭐
+  shepherd-baa|baa|咩              - 咩一下 / Auto-fix all ⭐⭐⭐
 
 **显意识命令 / Conscious Commands**:
   /conscious status                - 查看显意识状态 / Check conscious status
@@ -1022,6 +1023,138 @@ shepherd_harden() {
     echo "✅ 安全加固完成"
 }
 
+# 牧羊犬 - 咩一下 / Baa - 一键自动安全修复
+shepherd_baa() {
+    echo "🐑 **咩一下 / Baa - 一键自动安全修复**"
+    echo ""
+    echo "🐕 电子羊正在全面检查系统安全..."
+    echo ""
+    
+    local fixed=0
+    local suggestions=()
+    local needs_authorization=()
+    
+    # ========== 自动修复阶段 ==========
+    echo "🔧 第一阶段：自动修复..."
+    echo ""
+    
+    # 1. 清理备份文件
+    local bak_count=$(find "$HOME/.openclaw" -name "*.bak*" -type f 2>/dev/null | wc -l)
+    if [ "$bak_count" -gt 0 ]; then
+        echo "🗑️  清理 $bak_count 个备份文件..."
+        find "$HOME/.openclaw" -name "*.bak*" -type f -delete 2>/dev/null
+        echo "   ✅ 已清理"
+        fixed=$((fixed + 1))
+    else
+        echo "✅ 无备份文件需要清理"
+    fi
+    echo ""
+    
+    # 2. 修复文件权限
+    echo "🔐 检查文件权限..."
+    chmod 600 "$HOME/.openclaw/openclaw.json" 2>/dev/null && echo "   ✅ openclaw.json: 600"
+    chmod 700 "$HOME/.openclaw/agents" 2>/dev/null && echo "   ✅ agents/: 700"
+    if [ -f "$HOME/.openclaw/.secret-key" ]; then
+        chmod 400 "$HOME/.openclaw/.secret-key" 2>/dev/null && echo "   ✅ .secret-key: 400"
+    fi
+    fixed=$((fixed + 1))
+    echo ""
+    
+    # 3. 检查 API Key 状态
+    echo "🔑 检查 API Key 存储..."
+    if grep -q '"apiKey": *"sk-' "$HOME/.openclaw/openclaw.json" 2>/dev/null; then
+        echo "   ⚠️  检测到明文 API Key"
+        needs_authorization+=("明文 API Key 需要迁移到安全存储")
+    else
+        echo "   ✅ API Key 已安全存储"
+    fi
+    echo ""
+    
+    # 4. 检查密钥文件
+    if [ ! -f "$HOME/.openclaw/.secret-key" ]; then
+        echo "   ⚠️  密钥文件不存在"
+        suggestions+=("建议运行 shepherd-herd 赶羊入圈")
+    else
+        echo "   ✅ 密钥文件存在"
+    fi
+    echo ""
+    
+    # 5. 检查启动钩子
+    if [ ! -f "$HOME/.openclaw/hooks/load-secrets.sh" ]; then
+        echo "   ⚠️  启动钩子不存在"
+        suggestions+=("建议创建启动钩子 ~/.openclaw/hooks/load-secrets.sh")
+    else
+        echo "   ✅ 启动钩子存在"
+    fi
+    echo ""
+    
+    # 6. 检查环境变量
+    if [ -z "$OPENCLAW_API_KEY" ]; then
+        echo "   ⚠️  环境变量 OPENCLAW_API_KEY 未加载"
+        suggestions+=("运行：source ~/.openclaw/hooks/load-secrets.sh")
+    else
+        echo "   ✅ 环境变量已加载"
+    fi
+    echo ""
+    
+    # 7. Cron 监控
+    echo "⏰ 检查 Cron 任务..."
+    local cron_file="$HOME/.openclaw/cron/jobs.json"
+    if [ -f "$cron_file" ]; then
+        local high_freq=$(python3 -c "import json; jobs=json.load(open('$cron_file')).get('jobs',[]); print(sum(1 for j in jobs if j.get('schedule',{}).get('everyMs',999999)<300000))" 2>/dev/null || echo "0")
+        if [ "$high_freq" -gt 5 ]; then
+            echo "   ⚠️  高频任务过多：$high_freq 个"
+            suggestions+=("建议减少高频 Cron 任务（当前：$high_freq 个）")
+        else
+            echo "   ✅ Cron 频率正常"
+        fi
+    fi
+    echo ""
+    
+    # ========== 建议阶段 ==========
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📋 第二阶段：优化建议"
+    echo ""
+    
+    if [ ${#suggestions[@]} -gt 0 ]; then
+        echo "💡 建议操作："
+        for sug in "${suggestions[@]}"; do
+            echo "   • $sug"
+        done
+        echo ""
+    fi
+    
+    if [ ${#needs_authorization[@]} -gt 0 ]; then
+        echo "🔐 需要授权："
+        for auth in "${needs_authorization[@]}"; do
+            echo "   • $auth"
+            echo "     运行：shepherd-herd"
+        done
+        echo ""
+    fi
+    
+    # ========== 总结 ==========
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📊 咩一下完成！"
+    echo ""
+    echo "✅ 自动修复：$fixed 项"
+    echo "💡 优化建议：${#suggestions[@]} 项"
+    echo "🔐 需要授权：${#needs_authorization[@]} 项"
+    echo ""
+    
+    if [ ${#needs_authorization[@]} -eq 0 ] && [ ${#suggestions[@]} -eq 0 ]; then
+        echo "🎉 系统安全状态完美！无需额外操作！"
+    else
+        echo "📝 下一步建议："
+        echo "   1. 根据建议手动修复"
+        echo "   2. 运行 shepherd-score 查看详细评分"
+        echo "   3. 再次咩一下验证修复效果"
+    fi
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "🐑 咩~"
+}
+
 # 牧羊犬 - 安全评分
 shepherd_score() {
     echo "🐕 **牧羊犬 - 安全报告 / Shepherd Dog - Security Report**"
@@ -1291,8 +1424,12 @@ main() {
             shepherd_herd "$@"
             ;;
         
-              shepherd-score|shepherd-score)
+              shepherd-score)
             shepherd_score "$@"
+            ;;
+        
+        shepherd-baa|baa|咩)
+            shepherd_baa "$@"
             ;;
         
         # 命令包装
