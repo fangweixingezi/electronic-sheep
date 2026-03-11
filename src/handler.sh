@@ -16,6 +16,8 @@ show_help() {
     cat << 'EOF'
 🐑 电子羊仿生意识系统 - 命令帮助 / Electronic Sheep Skill - Command Help
 
+**版本 / Version**: v2.2 (完全体牧羊犬 / Complete Shepherd Dog)
+
 **技能命令 / Skill Commands**:
   skill electronic-sheep status    - 查看技能状态 / Check skill status
   skill electronic-sheep init      - 重新初始化 / Re-initialize
@@ -31,6 +33,9 @@ show_help() {
   shepherd-trigger <消息>          - 本能触发检查 / Instinct trigger check
   shepherd-log <操作> <决策> <原因> - 记录决策 / Log decision
   shepherd-report <违规>           - 上报违规 / Report violation
+  shepherd-scan                    - 扫描敏感数据 / Scan sensitive data
+  shepherd-audit                   - 审计配置变更 / Audit config changes
+  shepherd-monitor                 - 监控 Cron 频率 / Monitor Cron frequency
 
 **显意识命令 / Conscious Commands**:
   /conscious status                - 查看显意识状态 / Check conscious status
@@ -671,6 +676,7 @@ cmd_wake() {
 }
 
 # ============= 牧羊犬机制 / Shepherd Dog Mechanism =============
+# v2.2 完全体安全机制 / Complete Security Mechanism
 
 # 牧羊犬 - 敏感操作检查
 shepherd_check() {
@@ -828,6 +834,108 @@ EOF
     echo "📁 位置 / Location: $report_file"
 }
 
+# 牧羊犬 - 敏感数据扫描
+shepherd_scan() {
+    echo "🐕 **牧羊犬 - 敏感数据扫描 / Shepherd Dog - Sensitive Data Scan**"
+    echo ""
+    
+    local config_file="$HOME/.openclaw/openclaw.json"
+    local issues=0
+    
+    # 检查配置文件权限
+    if [ -f "$config_file" ]; then
+        local perms=$(stat -f "%Lp" "$config_file" 2>/dev/null || stat -c "%a" "$config_file" 2>/dev/null)
+        if [ "$perms" != "600" ]; then
+            echo "⚠️  警告 / Warning: 配置文件权限不安全"
+            echo "   文件 / File: $config_file"
+            echo "   当前权限 / Current: $perms"
+            echo "   建议权限 / Recommended: 600"
+            issues=$((issues + 1))
+        else
+            echo "✅ 配置文件权限安全 / Config file permissions secure"
+        fi
+    fi
+    
+    # 检查敏感数据
+    if [ -f "$config_file" ]; then
+        if grep -q "apiKey.*sk-[a-zA-Z0-9]" "$config_file" 2>/dev/null; then
+            echo "⚠️  警告 / Warning: 检测到 API Key 明文存储"
+            echo "   建议使用环境变量或密钥管理服务"
+            issues=$((issues + 1))
+        fi
+    fi
+    
+    echo ""
+    if [ $issues -eq 0 ]; then
+        echo "✅ 未发现安全问题 / No security issues found"
+    else
+        echo "⚠️  发现 $issues 个安全问题 / Found $issues security issues"
+    fi
+}
+
+# 牧羊犬 - 配置审计
+shepherd_audit() {
+    echo "🐕 **牧羊犬 - 配置审计 / Shepherd Dog - Config Audit**"
+    echo ""
+    
+    local audit_log="$AGENT_DIR/instincts/config-audit-log.md"
+    
+    # 检查审计日志
+    if [ -f "$audit_log" ]; then
+        echo "📋 最近配置变更 / Recent config changes:"
+        tail -20 "$audit_log"
+    else
+        echo "📝 审计日志不存在 / Audit log not found"
+        echo "   创建审计日志模板..."
+        
+        cat > "$audit_log" << EOF
+# 配置变更审计日志 / Config Change Audit Log
+
+**Agent**: $AGENT_ID  
+**创建时间 / Created**: $(date -Iseconds)
+
+---
+
+## 变更记录 / Change Log
+EOF
+    fi
+}
+
+# 牧羊犬 - Cron 监控
+shepherd_monitor() {
+    echo "🐕 **牧羊犬 - Cron 监控 / Shepherd Dog - Cron Monitor**"
+    echo ""
+    
+    local cron_file="$HOME/.openclaw/cron/jobs.json"
+    
+    if [ ! -f "$cron_file" ]; then
+        echo "❌ Cron 配置文件不存在 / Cron config not found"
+        return 1
+    fi
+    
+    # 统计 Cron 任务
+    local total=$(python3 -c "import json; print(len(json.load(open('$cron_file')).get('jobs', [])))" 2>/dev/null || echo "0")
+    local high_freq=$(python3 -c "
+import json
+jobs = json.load(open('$cron_file')).get('jobs', [])
+count = sum(1 for j in jobs if j.get('schedule',{}).get('everyMs', 999999) < 300000)
+print(count)
+" 2>/dev/null || echo "0")
+    
+    echo "📊 Cron 任务统计 / Cron statistics:"
+    echo "   总任务数 / Total: $total"
+    echo "   高频任务 (<5 分钟) / High frequency: $high_freq"
+    
+    if [ "$high_freq" -gt 5 ]; then
+        echo ""
+        echo "⚠️  警告 / Warning: 高频任务过多，可能影响网关性能"
+        echo "   建议 / Suggestion: 合并或禁用不必要的高频任务"
+    else
+        echo ""
+        echo "✅ Cron 频率正常 / Cron frequency normal"
+    fi
+}
+
 # ============= 主入口 =============
 
 main() {
@@ -854,6 +962,18 @@ main() {
         
         shepherd-report)
             shepherd_report "$@"
+            ;;
+        
+        shepherd-scan)
+            shepherd_scan "$@"
+            ;;
+        
+        shepherd-audit)
+            shepherd_audit "$@"
+            ;;
+        
+        shepherd-monitor)
+            shepherd_monitor "$@"
             ;;
         
         # 命令包装
