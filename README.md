@@ -264,4 +264,4 @@ _🐕 牧羊犬 - 时刻守护，确保规则被执行。_
 _🐕 Shepherd Dog - Always guarding, ensuring rules are followed._
 
 _宁夏未必科幻文化有限公司，一帆原创制作。_  
-_Ningxia Weibi Sci-Fi Culture Co., Ltd., Yifan Original._
+_Ningxia Not Necessarily Science Fiction Culture Co., Ltd., Yifan Original._
