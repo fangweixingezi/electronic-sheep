@@ -536,7 +536,7 @@ cmd_guide_status() {
     if [ -n "$backups" ]; then
         echo "$backups" | while read file; do
             local size=$(get_file_size_kb "$file")
-            local date=$(basename "$file" | grep -oP '\d{8}-\d{6}' | head -1)
+            local date=$(basename "$file" | grep -oE '[0-9]{8}-[0-9]{6}' | head -1)
             echo "- $date (${size}KB)"
         done
     else

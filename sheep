@@ -1,0 +1,20 @@
+#!/bin/bash
+# Electronic Sheep Skill - 便捷命令入口
+# 版权：宁夏未必科幻文化有限公司，一帆原创制作。
+
+# 自动检测 Agent 目录
+AGENT_DIR="${AGENT_DIR:-$HOME/.openclaw/agents/main}"
+HANDLER="$AGENT_DIR/skills/electronic-sheep/src/handler.sh"
+
+# 检查 handler.sh 是否存在
+if [ ! -f "$HANDLER" ]; then
+    echo "❌ 错误：handler.sh 不存在"
+    echo "📁 期望位置：$HANDLER"
+    echo ""
+    echo "请确认电子羊技能已正确安装："
+    echo "  bash ~/Desktop/electronic-sheep/scripts/init.sh $AGENT_DIR"
+    exit 1
+fi
+
+# 执行 handler.sh，传递所有参数
+bash "$HANDLER" "$@"
