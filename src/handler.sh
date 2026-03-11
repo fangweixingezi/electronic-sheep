@@ -37,6 +37,7 @@ show_help() {
   shepherd-audit                   - 审计配置变更 / Audit config changes
   shepherd-monitor                 - 监控 Cron 频率 / Monitor Cron frequency
   shepherd-harden                  - 安全加固 / Security hardening
+  shepherd-herd                    - 赶羊入圈 / Herd keys to secure storage ⭐
 
 **显意识命令 / Conscious Commands**:
   /conscious status                - 查看显意识状态 / Check conscious status
@@ -959,13 +960,118 @@ shepherd_harden() {
     echo "🔑 检查 API Key 存储..."
     if grep -q "apiKey.*sk-[a-zA-Z0-9]" "$HOME/.openclaw/openclaw.json" 2>/dev/null; then
         echo "⚠️  警告：API Key 明文存储"
-        echo "   建议：使用环境变量 OPENCLAW_API_KEY"
+        echo "   建议：运行 shepherd-herd 赶羊入圈"
     else
         echo "✅ API Key 未检测到或使用环境变量"
     fi
     echo ""
     
     echo "✅ 安全加固完成"
+}
+
+# 牧羊犬 - 赶羊功能（密钥迁移）
+shepherd_herd() {
+    echo "🐕 **牧羊犬 - 赶羊入圈 / Shepherd Dog - Herding Keys**"
+    echo ""
+    echo "🐑 把 API Key 安全地赶入羊圈（钥匙串 + 密钥文件）"
+    echo ""
+    
+    local config="$HOME/.openclaw/openclaw.json"
+    local secret_key="$HOME/.openclaw/.secret-key"
+    local hooks_dir="$HOME/.openclaw/hooks"
+    
+    # 1. 提取 API Key
+    echo "🔑 步骤 1/5: 提取 API Key..."
+    local api_key=$(grep -o '"apiKey": *"[^"]*"' "$config" 2>/dev/null | cut -d'"' -f4)
+    
+    if [ -z "$api_key" ]; then
+        echo "❌ 未找到 API Key"
+        return 1
+    fi
+    
+    echo "   ✅ API Key 已提取（长度：${#api_key}）"
+    echo ""
+    
+    # 2. 存储到密钥文件
+    echo "📁 步骤 2/5: 创建密钥文件..."
+    echo "$api_key" > "$secret_key"
+    chmod 400 "$secret_key"
+    echo "   ✅ 密钥文件已创建：$secret_key"
+    echo "   🔐 权限：400（只读）"
+    echo ""
+    
+    # 3. 添加到 macOS 钥匙串
+    echo "🔐 步骤 3/5: 添加到 macOS 钥匙串..."
+    if command -v security &> /dev/null; then
+        # 删除旧记录
+        security delete-generic-password -s "openclaw-api-key" 2>/dev/null || true
+        
+        # 添加新记录
+        security add-generic-password -s "openclaw-api-key" -a "api-key" -w "$api_key"
+        echo "   ✅ 已添加到 macOS 钥匙串"
+        echo "   🎯 服务名：openclaw-api-key"
+        echo "   👆 可用 Touch ID 解锁"
+    else
+        echo "   ⚠️  非 macOS 系统，跳过钥匙串"
+    fi
+    echo ""
+    
+    # 4. 创建启动钩子
+    echo "🪝 步骤 4/5: 创建启动钩子..."
+    mkdir -p "$hooks_dir"
+    cat > "$hooks_dir/load-secrets.sh" << 'HOOKEOF'
+#!/bin/bash
+# OpenClaw 敏感数据加载器
+# 版权：宁夏未必科幻文化有限公司，一帆原创制作
+
+# 从密钥文件加载
+if [ -f "$HOME/.openclaw/.secret-key" ]; then
+    export OPENCLAW_API_KEY=$(cat "$HOME/.openclaw/.secret-key")
+fi
+
+# 从钥匙串加载（macOS）
+if command -v security &> /dev/null; then
+    keychain_key=$(security find-generic-password -s "openclaw-api-key" -a "api-key" -w 2>/dev/null)
+    if [ -n "$keychain_key" ]; then
+        export OPENCLAW_API_KEY="$keychain_key"
+    fi
+fi
+HOOKEOF
+    chmod +x "$hooks_dir/load-secrets.sh"
+    echo "   ✅ 启动钩子已创建：$hooks_dir/load-secrets.sh"
+    echo ""
+    
+    # 5. 添加到 shell 启动
+    echo "📝 步骤 5/5: 添加到 shell 启动..."
+    if ! grep -q "load-secrets.sh" ~/.zshrc 2>/dev/null; then
+        echo '' >> ~/.zshrc
+        echo '# OpenClaw 敏感数据加载（牧羊犬赶羊功能）' >> ~/.zshrc
+        echo 'source ~/.openclaw/hooks/load-secrets.sh 2>/dev/null || true' >> ~/.zshrc
+        echo "   ✅ 已添加到 ~/.zshrc"
+    else
+        echo "   ⏭️  已存在，跳过"
+    fi
+    echo ""
+    
+    # 6. 创建备份
+    echo "💾 创建配置文件备份..."
+    cp "$config" "$config.bak.before-herd-$(date +%Y%m%d-%H%M%S)"
+    echo "   ✅ 备份已创建"
+    echo ""
+    
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "✅ 赶羊完成！API Key 已安全入圈"
+    echo ""
+    echo "📝 下一步："
+    echo "   1. 重启终端或运行：source ~/.zshrc"
+    echo "   2. 验证：echo \$OPENCLAW_API_KEY"
+    echo "   3. （可选）手动修改 openclaw.json 移除明文 apiKey"
+    echo ""
+    echo "🔐 安全提示："
+    echo "   - 密钥文件：$secret_key (400 权限)"
+    echo "   - 钥匙串：openclaw-api-key (Touch ID 保护)"
+    echo "   - 启动钩子：$hooks_dir/load-secrets.sh"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 }
 
 # ============= 主入口 =============
@@ -1010,6 +1116,10 @@ main() {
         
         shepherd-harden)
             shepherd_harden "$@"
+            ;;
+        
+        shepherd-herd)
+            shepherd_herd "$@"
             ;;
         
         # 命令包装
