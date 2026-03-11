@@ -38,6 +38,7 @@ show_help() {
   shepherd-monitor                 - 监控 Cron 频率 / Monitor Cron frequency
   shepherd-harden                  - 安全加固 / Security hardening
   shepherd-herd                    - 赶羊入圈 / Herd keys to secure storage ⭐
+  shepherd-score                   - 安全评分 / Security score ⭐
 
 **显意识命令 / Conscious Commands**:
   /conscious status                - 查看显意识状态 / Check conscious status
@@ -903,6 +904,36 @@ EOF
     fi
 }
 
+# 牧羊犬 - 记录配置变更（自动调用）
+shepherd_log_config_change() {
+    local change="$1"
+    local audit_log="$AGENT_DIR/instincts/config-audit-log.md"
+    local timestamp=$(date -Iseconds)
+    
+    # 确保审计日志存在
+    if [ ! -f "$audit_log" ]; then
+        cat > "$audit_log" << EOF
+# 配置变更审计日志 / Config Change Audit Log
+
+**Agent**: $AGENT_ID  
+**创建时间 / Created**: $(date -Iseconds)
+
+---
+
+## 变更记录 / Change Log
+EOF
+    fi
+    
+    # 追加记录
+    cat >> "$audit_log" << EOF
+
+### $timestamp
+- **变更 / Change**: $change
+
+---
+EOF
+}
+
 # 牧羊犬 - Cron 监控
 shepherd_monitor() {
     echo "🐕 **牧羊犬 - Cron 监控 / Shepherd Dog - Cron Monitor**"
@@ -967,6 +998,83 @@ shepherd_harden() {
     echo ""
     
     echo "✅ 安全加固完成"
+}
+
+# 牧羊犬 - 安全评分
+shepherd_score() {
+    echo "🐕 **牧羊犬 - 安全报告 / Shepherd Dog - Security Report**"
+    echo ""
+    echo "📊 生成时间 / Generated: $(date -Iseconds)"
+    echo ""
+    
+    local score=100
+    local issues=()
+    
+    # 检查 1: API Key 明文
+    if grep -q "apiKey.*sk-[a-zA-Z0-9]" "$HOME/.openclaw/openclaw.json" 2>/dev/null; then
+        issues+=("🔴 API Key 明文存储")
+        score=$((score - 20))
+    else
+        echo "✅ API Key 安全存储"
+    fi
+    
+    # 检查 2: 文件权限
+    local config_perms=$(stat -f "%Lp" "$HOME/.openclaw/openclaw.json" 2>/dev/null || stat -c "%a" "$HOME/.openclaw/openclaw.json" 2>/dev/null)
+    if [ "$config_perms" != "600" ]; then
+        issues+=("🟡 配置文件权限不当 ($config_perms)")
+        score=$((score - 10))
+    else
+        echo "✅ 配置文件权限正确"
+    fi
+    
+    # 检查 3: 备份文件
+    local bak_count=$(find "$HOME/.openclaw" -name "*.bak*" -type f 2>/dev/null | wc -l)
+    if [ "$bak_count" -gt 0 ]; then
+        issues+=("🟡 发现 $bak_count 个备份文件")
+        score=$((score - 5))
+    else
+        echo "✅ 无敏感备份文件"
+    fi
+    
+    # 检查 4: Cron 频率
+    local cron_file="$HOME/.openclaw/cron/jobs.json"
+    if [ -f "$cron_file" ]; then
+        local high_freq=$(python3 -c "import json; jobs=json.load(open('$cron_file')).get('jobs',[]); print(sum(1 for j in jobs if j.get('schedule',{}).get('everyMs',999999)<300000))" 2>/dev/null || echo "0")
+        if [ "$high_freq" -gt 5 ]; then
+            issues+=("🟡 高频 Cron 任务过多 ($high_freq)")
+            score=$((score - 10))
+        else
+            echo "✅ Cron 频率正常"
+        fi
+    fi
+    
+    # 检查 5: 密钥文件
+    if [ -f "$HOME/.openclaw/.secret-key" ]; then
+        local key_perms=$(stat -f "%Lp" "$HOME/.openclaw/.secret-key" 2>/dev/null || stat -c "%a" "$HOME/.openclaw/.secret-key" 2>/dev/null)
+        if [ "$key_perms" = "400" ]; then
+            echo "✅ 密钥文件权限正确"
+        else
+            issues+=("🟡 密钥文件权限不当 ($key_perms)")
+            score=$((score - 10))
+        fi
+    fi
+    
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "📊 安全评分 / Security Score: $score/100"
+    echo ""
+    
+    if [ ${#issues[@]} -gt 0 ]; then
+        echo "⚠️  发现的问题 / Issues Found:"
+        for issue in "${issues[@]}"; do
+            echo "   $issue"
+        done
+        echo ""
+        echo "💡 建议运行：shepherd-harden 进行安全加固"
+    else
+        echo "✅ 无安全问题 / No security issues"
+    fi
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 }
 
 # 牧羊犬 - 赶羊功能（密钥迁移）
@@ -1120,6 +1228,10 @@ main() {
         
         shepherd-herd)
             shepherd_herd "$@"
+            ;;
+        
+              shepherd-score|shepherd-score)
+            shepherd_score "$@"
             ;;
         
         # 命令包装
