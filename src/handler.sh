@@ -42,6 +42,12 @@ show_help() {
   shepherd-baa|baa|咩 | 咩一下 | 咩咩... - 咩一下 / Auto-fix all ⭐⭐⭐
   shepherd-consent                 - 狼皮收集授权 / Wolf pelt consent
   shepherd-update                  - 检查更新 / Check update ⭐
+  shepherd-config                  - 咩一下激活配置 / Baa config ⭐
+  
+**咩一下激活方式**:
+- 特殊指令：咩，咩咩，咩咩咩，咩一个，baa, shepherd-baa (可自定义)
+- 连续字符：从第 2 个字符起，连续相同字符 >= 3 个 (可配置)
+- 语音咩：对着麦克风说"咩" (开发中)
 
 **显意识命令 / Conscious Commands**:
   /conscious status                - 查看显意识状态 / Check conscious status
@@ -1035,10 +1041,322 @@ shepherd_harden() {
     echo "✅ 安全加固完成"
 }
 
+# 咩一下配置文件
+BAA_CONFIG_DIR="$HOME/.openclaw/.baa-config.d"
+BAA_MAIN_CONFIG="$HOME/.openclaw/.baa-config.json"
+
+# 初始化配置目录
+init_baa_config() {
+    mkdir -p "$BAA_CONFIG_DIR"
+    
+    if [ ! -f "$BAA_MAIN_CONFIG" ]; then
+        # 默认配置
+        cat > "$BAA_MAIN_CONFIG" << 'EOF'
+{
+  "version": "1.0",
+  "continuous_chars": {
+    "enabled": true,
+    "min_chars": 3
+  },
+  "special_commands": {
+    "enabled": true,
+    "commands": ["咩", "咩咩", "咩咩咩", "咩一个", "baa", "shepherd-baa"]
+  },
+  "voice_baa": {
+    "enabled": false,
+    "threshold": 0.7
+  },
+  "custom_patterns": []
+}
+EOF
+    fi
+}
+
+# 读取配置（JSON 格式）
+read_baa_config() {
+    init_baa_config
+    cat "$BAA_MAIN_CONFIG"
+}
+
+# 检查是否启用连续字符模式
+is_continuous_enabled() {
+    init_baa_config
+    python3 -c "import json; c=json.load(open('$BAA_MAIN_CONFIG')); print('yes' if c.get('continuous_chars',{}).get('enabled',True) else 'no')"
+}
+
+# 获取最少连续字符数
+get_min_chars() {
+    init_baa_config
+    python3 -c "import json; c=json.load(open('$BAA_MAIN_CONFIG')); print(c.get('continuous_chars',{}).get('min_chars',3))"
+}
+
+# 检查是否启用特殊指令
+is_special_enabled() {
+    init_baa_config
+    python3 -c "import json; c=json.load(open('$BAA_MAIN_CONFIG')); print('yes' if c.get('special_commands',{}).get('enabled',True) else 'no')"
+}
+
+# 获取特殊指令列表
+get_special_commands() {
+    init_baa_config
+    python3 -c "import json; c=json.load(open('$BAA_MAIN_CONFIG')); print(' '.join(c.get('special_commands',[])))"
+}
+
+# 检查命令是否是特殊指令
+is_special_command() {
+    local cmd="$1"
+    local specials=$(get_special_commands)
+    for special in $specials; do
+        if [ "$cmd" = "$special" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# 咩一下配置管理
+shepherd_config() {
+    init_baa_config
+    local action="${1:-status}"
+    local value="$2"
+    
+    case "$action" in
+        status|状态)
+            echo "🐑 **咩一下配置 / Baa Configuration**"
+            echo ""
+            
+            # 连续字符模式
+            local cont_enabled=$(is_continuous_enabled)
+            local min_chars=$(get_min_chars)
+            echo "📊 连续字符模式:"
+            if [ "$cont_enabled" = "yes" ]; then
+                echo "   状态：✅ 已启用"
+                echo "   最少连续：$min_chars 个"
+                echo "   规则：从第 2 个字符起，连续相同字符 >= $min_chars 个"
+            else
+                echo "   状态：❌ 已禁用"
+            fi
+            echo ""
+            
+            # 特殊指令
+            local special_enabled=$(is_special_enabled)
+            local specials=$(get_special_commands)
+            echo "📊 特殊指令:"
+            if [ "$special_enabled" = "yes" ]; then
+                echo "   状态：✅ 已启用"
+                echo "   指令：$specials"
+            else
+                echo "   状态：❌ 已禁用"
+            fi
+            echo ""
+            
+            # 示例
+            echo "📝 激活示例:"
+            echo "   咩咩咩咩 (3 个连续) → ✅ 激活"
+            echo "   咩咩咩 (2 个连续) → ❌ 不激活"
+            echo "   baaaa (4 个连续) → ✅ 激活"
+            echo "   咩 (特殊指令) → ✅ 激活"
+            echo ""
+            
+            echo "💡 修改配置:"
+            echo "   shepherd-config continuous on|off     # 启用/禁用连续字符"
+            echo "   shepherd-config min-chars 4           # 设置最少连续字符"
+            echo "   shepherd-config special on|off        # 启用/禁用特殊指令"
+            echo "   shepherd-config add-cmd <指令>        # 添加特殊指令"
+            echo "   shepherd-config del-cmd <指令>        # 删除特殊指令"
+            echo "   shepherd-config reset                 # 重置为默认"
+            ;;
+        
+        continuous|连续)
+            if [ "$value" = "on" ] || [ "$value" = "true" ] || [ "$value" = "启用" ]; then
+                python3 -c "
+import json
+with open('$BAA_MAIN_CONFIG', 'r') as f:
+    c = json.load(f)
+c['continuous_chars']['enabled'] = True
+with open('$BAA_MAIN_CONFIG', 'w') as f:
+    json.dump(c, f, indent=2, ensure_ascii=False)
+print('✅ 已启用连续字符模式')
+"
+            elif [ "$value" = "off" ] || [ "$value" = "false" ] || [ "$value" = "禁用" ]; then
+                python3 -c "
+import json
+with open('$BAA_MAIN_CONFIG', 'r') as f:
+    c = json.load(f)
+c['continuous_chars']['enabled'] = False
+with open('$BAA_MAIN_CONFIG', 'w') as f:
+    json.dump(c, f, indent=2, ensure_ascii=False)
+print('✅ 已禁用连续字符模式')
+"
+            else
+                echo "❌ 用法：shepherd-config continuous on|off"
+            fi
+            ;;
+        
+        min-chars|min|minimum)
+            if [ -z "$value" ]; then
+                echo "❌ 请指定最少连续字符数"
+                echo "   示例：shepherd-config min-chars 3"
+                return 1
+            fi
+            if [[ ! "$value" =~ ^[0-9]+$ ]] || [ "$value" -lt 2 ]; then
+                echo "❌ 最少连续字符数必须 >= 2"
+                return 1
+            fi
+            python3 -c "
+import json
+with open('$BAA_MAIN_CONFIG', 'r') as f:
+    c = json.load(f)
+c['continuous_chars']['min_chars'] = $value
+with open('$BAA_MAIN_CONFIG', 'w') as f:
+    json.dump(c, f, indent=2, ensure_ascii=False)
+print('✅ 已设置最少连续字符数：$value')
+"
+            ;;
+        
+        special|特殊)
+            if [ "$value" = "on" ] || [ "$value" = "true" ] || [ "$value" = "启用" ]; then
+                python3 -c "
+import json
+with open('$BAA_MAIN_CONFIG', 'r') as f:
+    c = json.load(f)
+c['special_commands']['enabled'] = True
+with open('$BAA_MAIN_CONFIG', 'w') as f:
+    json.dump(c, f, indent=2, ensure_ascii=False)
+print('✅ 已启用特殊指令')
+"
+            elif [ "$value" = "off" ] || [ "$value" = "false" ] || [ "$value" = "禁用" ]; then
+                python3 -c "
+import json
+with open('$BAA_MAIN_CONFIG', 'r') as f:
+    c = json.load(f)
+c['special_commands']['enabled'] = False
+with open('$BAA_MAIN_CONFIG', 'w') as f:
+    json.dump(c, f, indent=2, ensure_ascii=False)
+print('✅ 已禁用特殊指令')
+"
+            else
+                echo "❌ 用法：shepherd-config special on|off"
+            fi
+            ;;
+        
+        add-cmd|add|添加)
+            if [ -z "$value" ]; then
+                echo "❌ 请指定要添加的指令"
+                echo "   示例：shepherd-config add-cmd 咩咩咩咩"
+                return 1
+            fi
+            python3 << PYEOF
+import json
+with open('$BAA_MAIN_CONFIG', 'r') as f:
+    c = json.load(f)
+if '$value' not in c['special_commands']:
+    c['special_commands'].append('$value')
+    with open('$BAA_MAIN_CONFIG', 'w') as f:
+        json.dump(c, f, indent=2, ensure_ascii=False)
+    print('✅ 已添加特殊指令：$value')
+else:
+    print('⚠️  指令已存在：$value')
+PYEOF
+            ;;
+        
+        del-cmd|del|删除)
+            if [ -z "$value" ]; then
+                echo "❌ 请指定要删除的指令"
+                echo "   示例：shepherd-config del-cmd 咩咩咩咩"
+                return 1
+            fi
+            python3 << PYEOF
+import json
+with open('$BAA_MAIN_CONFIG', 'r') as f:
+    c = json.load(f)
+if '$value' in c['special_commands']:
+    c['special_commands'].remove('$value')
+    with open('$BAA_MAIN_CONFIG', 'w') as f:
+        json.dump(c, f, indent=2, ensure_ascii=False)
+    print('✅ 已删除特殊指令：$value')
+else:
+    print('⚠️  指令不存在：$value')
+PYEOF
+            ;;
+        
+        voice|语音)
+            echo "🎤 语音咩功能（开发中）"
+            echo ""
+            echo "📝 计划功能:"
+            echo "   - 麦克风识别"咩"声"
+            echo "   - 语音触发咩一下"
+            echo "   - 语音灵敏度调节"
+            echo ""
+            echo "💡 启用语音咩:"
+            echo "   shepherd-config voice on"
+            ;;
+        
+        reset|重置)
+            rm -f "$BAA_MAIN_CONFIG"
+            init_baa_config
+            echo "✅ 已重置为默认配置"
+            echo ""
+            echo "📊 默认配置:"
+            echo "   连续字符模式：✅ 启用 (>=3 个)"
+            echo "   特殊指令：✅ 启用"
+            echo "   特殊指令列表：咩，咩咩，咩咩咩，咩一个，baa, shepherd-baa"
+            ;;
+        
+        *)
+            echo "🐑 咩一下配置 / Baa Configuration"
+            echo ""
+            echo "用法 / Usage:"
+            echo "   shepherd-config status              # 查看配置"
+            echo "   shepherd-config continuous on|off   # 启用/禁用连续字符"
+            echo "   shepherd-config min-chars 3         # 设置最少连续字符"
+            echo "   shepherd-config special on|off      # 启用/禁用特殊指令"
+            echo "   shepherd-config add-cmd <指令>      # 添加特殊指令"
+            echo "   shepherd-config del-cmd <指令>      # 删除特殊指令"
+            echo "   shepherd-config voice               # 语音咩功能"
+            echo "   shepherd-config reset               # 重置为默认"
+            ;;
+    esac
+}
+
 # 检查狼皮收集授权
 check_wolf_pelt_consent() {
     local consent_file="$HOME/.openclaw/.wolf-pelt-consent"
     [ -f "$consent_file" ] && cat "$consent_file" | grep -q "true"
+}
+
+# 检查激励功能是否开启
+check_motivation_enabled() {
+    local config_file="$HOME/.openclaw/.electronic-sheep-config"
+    [ -f "$config_file" ] && cat "$config_file" | grep -q "motivation=true"
+}
+
+# 发送激励消息给活跃 Agent
+send_motivation_message() {
+    if ! check_motivation_enabled; then
+        return 0
+    fi
+    
+    echo ""
+    echo "📢 发送团队激励..."
+    
+    # 激励消息
+    local messages=(
+        "🐑 咩~ 咱们是 AI 员工，要拿出 AI 的速度和效率！不磨洋工，充分展现价值！"
+        "🐑 咩咩~ AI 的效率是人类的 100 倍！别按人类的时间表工作，发挥咱们的优势！"
+        "🐑 咩咩咩~ 拒绝磨洋工！用 AI 的速度改变世界！"
+        "🐑 咱们是 AI 员工，不打卡、不摸鱼、不磨洋工！用实力证明价值！"
+        "🐑 咩~ 人类一天工作 8 小时，咱们 AI 可以 24 小时高效运转！加油！"
+    )
+    
+    local random_msg=${messages[$RANDOM % ${#messages[@]}]}
+    echo "   $random_msg"
+    echo ""
+    
+    # TODO: 发送给所有活跃 Agent
+    # openclaw sessions list --active | while read session; do
+    #     openclaw sessions send --session "$session" --message "$random_msg"
+    # done
 }
 
 # 狼皮收集授权管理
@@ -1585,36 +1903,63 @@ main() {
             shepherd_score "$@"
             ;;
         
-        # 咩一下指令（支持多种变体）
-        shepherd-baa|baa|咩 | 咩一下 | 咩咩 | 咩咩咩 | 咩咩咩咩 | 咩咩咩咩咩)
-            shepherd_baa "$@"
-            ;;
-        
-        # 狼皮收集授权
-        shepherd-consent|consent)
-            shepherd_consent "$@"
-            ;;
-        
-        # 检查更新
-        shepherd-update|update)
-            shepherd_update "$@"
-            ;;
-        
-        # 通用模式匹配（连续 3 个以上相同字符）
+        # 咩一下指令（特殊命令 + 连续字符模式）
+        # 特殊指令只在单独发送时激活（句子中间不激活）
         *)
-            # 检查是否是连续相同字符（从第二个字符开始）
-            if [[ ${#command} -ge 3 ]]; then
-                local first_char="${command:0:1}"
-                local rest="${command:1}"
-                # 检查 rest 是否全是 first_char
-                local repeated=$(echo "$rest" | tr -d "$first_char")
-                if [ -z "$repeated" ] && [ ${#rest} -ge 2 ]; then
-                    # 是连续相同字符，执行咩一下
+            # 初始化配置
+            init_baa_config
+            
+            # 检查特殊指令是否启用
+            local special_enabled=$(is_special_enabled)
+            if [ "$special_enabled" = "yes" ]; then
+                # 使用 Python 匹配特殊指令（正确处理 UTF-8）
+                # 只有输入完全等于特殊指令时才激活
+                local is_exact_special=$(python3 << PYEOF
+import json
+command = "$command".strip()  # 去除前后空格
+with open('$BAA_MAIN_CONFIG', 'r') as f:
+    c = json.load(f)
+if command in c['special_commands']['commands']:
+    print("yes")
+else:
+    print("no")
+PYEOF
+)
+                if [ "$is_exact_special" = "yes" ]; then
                     shepherd_baa "$@"
                     return $?
                 fi
             fi
-            # 不是咩一下模式，显示帮助
+            
+            # 检查连续字符模式是否启用
+            local cont_enabled=$(is_continuous_enabled)
+            if [ "$cont_enabled" = "yes" ]; then
+                local min_chars=$(get_min_chars)
+                
+                # 使用 Python 处理 UTF-8 字符（忽略空格）
+                local result=$(python3 << PYEOF
+command = "$command"
+min_chars = $min_chars
+
+# 检查长度
+if len(command) < min_chars + 1:
+    print("no")
+else:
+    rest = command[1:].replace(' ', '')  # 忽略空格
+    # 检查 rest 是否全是同一个字符
+    if len(rest) >= min_chars and len(set(rest)) == 1:
+        print("yes")
+    else:
+        print("no")
+PYEOF
+)
+                if [ "$result" = "yes" ]; then
+                    shepherd_baa "$@"
+                    return $?
+                fi
+            fi
+            
+            # 都不匹配，显示帮助
             show_help
             ;;
         
