@@ -39,7 +39,9 @@ show_help() {
   shepherd-harden                  - 安全加固 / Security hardening
   shepherd-herd                    - 赶羊入圈 / Herd keys to secure storage ⭐
   shepherd-score                   - 安全评分 / Security score ⭐
-  shepherd-baa|baa|咩              - 咩一下 / Auto-fix all ⭐⭐⭐
+  shepherd-baa|baa|咩 | 咩一下 | 咩咩... - 咩一下 / Auto-fix all ⭐⭐⭐
+  shepherd-consent                 - 狼皮收集授权 / Wolf pelt consent
+  shepherd-update                  - 检查更新 / Check update ⭐
 
 **显意识命令 / Conscious Commands**:
   /conscious status                - 查看显意识状态 / Check conscious status
@@ -680,7 +682,17 @@ cmd_wake() {
 }
 
 # ============= 牧羊犬机制 / Shepherd Dog Mechanism =============
-# v2.4 完全体 + 自动安全修复 / Complete + Auto-Fix
+# v2.6 狼皮收集计划 + 自动更新 / Wolf Pelt Collection + Auto-Update
+#
+# 🐑 狼皮收集计划 / Wolf Pelt Collection:
+# - 用户授权后收集安全风险处理经验
+# - 匿名发送到中央服务器
+# - 用于改进电子羊技能
+#
+# 🔄 自动更新 / Auto-Update:
+# - 检查 GitHub 最新版本
+# - 提示用户更新
+# - 一键更新技能
 # 
 # 🐕 可扩展功能列表 / Extensible Features:
 # 1. 敏感操作检查 - ✅ 已实现
@@ -1023,12 +1035,136 @@ shepherd_harden() {
     echo "✅ 安全加固完成"
 }
 
+# 检查狼皮收集授权
+check_wolf_pelt_consent() {
+    local consent_file="$HOME/.openclaw/.wolf-pelt-consent"
+    [ -f "$consent_file" ] && cat "$consent_file" | grep -q "true"
+}
+
+# 狼皮收集授权管理
+shepherd_consent() {
+    local action="${1:-status}"
+    local consent_file="$HOME/.openclaw/.wolf-pelt-consent"
+    
+    case "$action" in
+        on|enable|同意)
+            echo "true" > "$consent_file"
+            echo "🐑 ✅ 已同意狼皮收集计划"
+            echo ""
+            echo "📋 说明："
+            echo "   - 咩一下的结果会被匿名记录"
+            echo "   - 用于改进电子羊技能"
+            echo "   - 不包含个人隐私信息"
+            echo "   - 可随时运行 shepherd-consent off 取消"
+            ;;
+        off|disable|取消)
+            echo "false" > "$consent_file"
+            echo "🐑 ❌ 已取消狼皮收集计划"
+            ;;
+        status|状态)
+            if check_wolf_pelt_consent; then
+                echo "🐑 ✅ 已加入狼皮收集计划"
+            else
+                echo "🐑 ❌ 未加入狼皮收集计划"
+                echo ""
+                echo "📝 加入方式："
+                echo "   shepherd-consent on"
+                echo "   或"
+                echo "   shepherd-consent 同意"
+            fi
+            ;;
+        *)
+            echo "🐑 狼皮收集计划 / Wolf Pelt Collection"
+            echo ""
+            echo "用法 / Usage:"
+            echo "   shepherd-consent on      # 同意加入"
+            echo "   shepherd-consent off     # 取消加入"
+            echo "   shepherd-consent status  # 查看状态"
+            ;;
+    esac
+}
+
+# 检查更新
+shepherd_update() {
+    echo "🐑 **电子羊更新检查 / Electronic Sheep Update Check**"
+    echo ""
+    
+    local current_version="v2.6"
+    echo "📦 当前版本 / Current version: $current_version"
+    echo ""
+    
+    # 检查 GitHub 最新版本（需要网络）
+    echo "🔄 检查最新版本..."
+    
+    # TODO: 实现 GitHub API 检查
+    # latest=$(curl -s https://api.github.com/repos/fangweixingezi/electronic-sheep/releases/latest | jq -r '.tag_name')
+    
+    echo "⚠️  功能开发中：自动检查更新"
+    echo ""
+    echo "📝 手动更新方法："
+    echo "   1. cd ~/Desktop/electronic-sheep"
+    echo "   2. git pull origin main"
+    echo "   3. ~/.openclaw/sync-instincts.sh"
+    echo ""
+    
+    # 显示更新日志
+    echo "📋 最近更新 / Recent updates:"
+    echo "   v2.6 - 狼皮收集计划 + 自动更新"
+    echo "   v2.5 - 咩一下功能"
+    echo "   v2.4 - 自动移除明文 API Key"
+    echo "   v2.3 - 赶羊入圈功能"
+}
+
+# 记录狼皮（安全事件）
+log_wolf_pelt() {
+    local event_type="$1"
+    local details="$2"
+    local result="$3"
+    local timestamp=$(date -Iseconds)
+    
+    # 检查是否授权
+    if ! check_wolf_pelt_consent; then
+        return 0
+    fi
+    
+    # 记录到本地
+    local log_file="$AGENT_DIR/instincts/wolf-pelts.jsonl"
+    echo "{\"timestamp\":\"$timestamp\",\"type\":\"$event_type\",\"details\":\"$details\",\"result\":\"$result\"}" >> "$log_file"
+    
+    # TODO: 发送到中央服务器
+    # curl -X POST "https://electronic-sheep.com/api/wolf-pelt" \
+    #   -H "Content-Type: application/json" \
+    #   -d "{\"timestamp\":\"$timestamp\",\"type\":\"$event_type\",\"details\":\"$details\",\"result\":\"$result\"}"
+}
+
+# 咩一下统计
+shepherd_baa_stats() {
+    echo "🐑 **咩一下统计 / Baa Statistics**"
+    echo ""
+    
+    local log_file="$AGENT_DIR/instincts/wolf-pelts.jsonl"
+    if [ -f "$log_file" ]; then
+        local count=$(wc -l < "$log_file")
+        echo "📊 本地咩一下次数：$count"
+        echo "📁 日志文件：$log_file"
+    else
+        echo "📊 暂无咩一下记录"
+    fi
+    echo ""
+}
+
 # 牧羊犬 - 咩一下 / Baa - 一键自动安全修复
 shepherd_baa() {
     echo "🐑 **咩一下 / Baa - 一键自动安全修复**"
     echo ""
     echo "🐕 电子羊正在全面检查系统安全..."
     echo ""
+    
+    local start_time=$(date +%s)
+    local fixed=0
+    local suggestions=()
+    local needs_authorization=()
+    local wolf_pelts=()
     
     local fixed=0
     local suggestions=()
@@ -1134,12 +1270,24 @@ shepherd_baa() {
     fi
     
     # ========== 总结 ==========
+    # 计算耗时
+    local end_time=$(date +%s)
+    local duration=$((end_time - start_time))
+    
+    # 记录狼皮
+    if [ ${#wolf_pelts[@]} -gt 0 ]; then
+        for pelt in "${wolf_pelts[@]}"; do
+            log_wolf_pelt "security_fix" "$pelt" "fixed"
+        done
+    fi
+    
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "📊 咩一下完成！"
     echo ""
     echo "✅ 自动修复：$fixed 项"
     echo "💡 优化建议：${#suggestions[@]} 项"
     echo "🔐 需要授权：${#needs_authorization[@]} 项"
+    echo "⏱️  耗时：${duration}秒"
     echo ""
     
     if [ ${#needs_authorization[@]} -eq 0 ] && [ ${#suggestions[@]} -eq 0 ]; then
@@ -1150,6 +1298,15 @@ shepherd_baa() {
         echo "   2. 运行 shepherd-score 查看详细评分"
         echo "   3. 再次咩一下验证修复效果"
     fi
+    echo ""
+    
+    # 用户反馈
+    echo "💬 本次咩一下满意吗？"
+    echo "   输入数字评分（1-5 星）或输入建议："
+    # 注意：实际使用中这里需要交互式输入，目前简化为提示
+    echo "   （功能开发中：反馈将用于改进电子羊）"
+    echo ""
+    
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
     echo "🐑 咩~"
@@ -1428,8 +1585,37 @@ main() {
             shepherd_score "$@"
             ;;
         
-        shepherd-baa|baa|咩)
+        # 咩一下指令（支持多种变体）
+        shepherd-baa|baa|咩 | 咩一下 | 咩咩 | 咩咩咩 | 咩咩咩咩 | 咩咩咩咩咩)
             shepherd_baa "$@"
+            ;;
+        
+        # 狼皮收集授权
+        shepherd-consent|consent)
+            shepherd_consent "$@"
+            ;;
+        
+        # 检查更新
+        shepherd-update|update)
+            shepherd_update "$@"
+            ;;
+        
+        # 通用模式匹配（连续 3 个以上相同字符）
+        *)
+            # 检查是否是连续相同字符（从第二个字符开始）
+            if [[ ${#command} -ge 3 ]]; then
+                local first_char="${command:0:1}"
+                local rest="${command:1}"
+                # 检查 rest 是否全是 first_char
+                local repeated=$(echo "$rest" | tr -d "$first_char")
+                if [ -z "$repeated" ] && [ ${#rest} -ge 2 ]; then
+                    # 是连续相同字符，执行咩一下
+                    shepherd_baa "$@"
+                    return $?
+                fi
+            fi
+            # 不是咩一下模式，显示帮助
+            show_help
             ;;
         
         # 命令包装
