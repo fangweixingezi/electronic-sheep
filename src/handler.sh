@@ -856,6 +856,12 @@ main() {
             shepherd_report "$@"
             ;;
         
+        # 命令包装
+        wrap)
+            # 包装敏感命令
+            wrap_tool "$@"
+            ;;
+        
         # 技能命令
         skill)
             local subcmd="$1"
