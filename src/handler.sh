@@ -679,7 +679,29 @@ cmd_wake() {
 }
 
 # ============= 牧羊犬机制 / Shepherd Dog Mechanism =============
-# v2.2 完全体安全机制 / Complete Security Mechanism
+# v2.4 完全体 + 自动安全修复 / Complete + Auto-Fix
+# 
+# 🐕 可扩展功能列表 / Extensible Features:
+# 1. 敏感操作检查 - ✅ 已实现
+# 2. 本能触发 - ✅ 已实现
+# 3. 决策日志 - ✅ 已实现
+# 4. 违规上报 - ✅ 已实现
+# 5. 敏感数据扫描 - ✅ 已实现
+# 6. 配置审计 - ✅ 已实现
+# 7. Cron 监控 - ✅ 已实现
+# 8. 安全加固 - ✅ 已实现
+# 9. 赶羊入圈 - ✅ 已实现
+# 10. 安全评分 - ✅ 已实现
+# 11. 自动移除明文 - ✅ 已实现
+# 
+# 🔮 未来可扩展 / Future Extensions:
+# - 飞书审批集成
+# - 多因素认证（飞书 + Touch ID）
+# - 定期安全报告 Cron
+# - 密钥自动轮换
+# - 异常行为检测
+# - 多 Agent 权限隔离
+# - 访问日志分析
 
 # 牧羊犬 - 敏感操作检查
 shepherd_check() {
@@ -1162,23 +1184,62 @@ HOOKEOF
     echo ""
     
     # 6. 创建备份
-    echo "💾 创建配置文件备份..."
-    cp "$config" "$config.bak.before-herd-$(date +%Y%m%d-%H%M%S)"
-    echo "   ✅ 备份已创建"
+    echo "💾 步骤 6/7: 创建配置文件备份..."
+    local backup_file="$config.bak.before-herd-$(date +%Y%m%d-%H%M%S)"
+    cp "$config" "$backup_file"
+    echo "   ✅ 备份已创建：$backup_file"
+    echo ""
+    
+    # 7. 自动移除明文 API Key
+    echo "🔐 步骤 7/7: 移除明文 API Key..."
+    
+    # 检查是否有 API Key
+    local has_api_key=$(grep -c '"apiKey": *"sk-' "$config" 2>/dev/null || echo "0")
+    
+    if [ "$has_api_key" -gt 0 ]; then
+        # 使用 Python 安全地替换（避免 sed 跨平台问题）
+        python3 << PYEOF
+import json
+import re
+
+with open('$config', 'r') as f:
+    content = f.read()
+
+# 使用正则替换所有 sk-开头的 API Key
+content = re.sub(r'"apiKey":\s*"sk-[a-zA-Z0-9]*"', '"apiKey": "\${OPENCLAW_API_KEY}"', content)
+
+with open('$config', 'w') as f:
+    f.write(content)
+
+print("   ✅ 明文 API Key 已替换为环境变量引用")
+PYEOF
+        
+        echo "   ✅ 明文 API Key 已移除"
+        echo "   📝 配置已更新为使用 \$OPENCLAW_API_KEY"
+    else
+        echo "   ⏭️  未检测到明文 API Key，跳过"
+    fi
+    echo ""
+    
+    # 清理备份文件（只保留一个）
+    echo "🗑️  清理旧备份文件..."
+    find "$(dirname "$backup_file")" -name "before-herd-*.bak" -type f -mmin +60 -delete 2>/dev/null
+    echo "   ✅ 旧备份已清理"
     echo ""
     
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "✅ 赶羊完成！API Key 已安全入圈"
+    echo "✅ 赶羊完成！API Key 已安全入圈 + 明文已移除"
     echo ""
     echo "📝 下一步："
     echo "   1. 重启终端或运行：source ~/.zshrc"
     echo "   2. 验证：echo \$OPENCLAW_API_KEY"
-    echo "   3. （可选）手动修改 openclaw.json 移除明文 apiKey"
+    echo "   3. 验证配置：openclaw gateway status"
     echo ""
     echo "🔐 安全提示："
     echo "   - 密钥文件：$secret_key (400 权限)"
     echo "   - 钥匙串：openclaw-api-key (Touch ID 保护)"
     echo "   - 启动钩子：$hooks_dir/load-secrets.sh"
+    echo "   - 配置文件：已使用环境变量引用"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 }
 
