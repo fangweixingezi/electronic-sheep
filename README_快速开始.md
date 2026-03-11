@@ -145,7 +145,6 @@ bash ~/Desktop/electronic-sheep/scripts/project-archive.sh \
 
 ### 保留（业务需求）
 
-- ✅ 房产监控（早晚报告）
 - ✅ 晨会系列（市场/运营/人事）
 - ✅ 项目日志备份（已改为事件触发）
 

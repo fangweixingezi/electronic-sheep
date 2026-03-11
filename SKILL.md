@@ -364,3 +364,24 @@ GitHub：待上传（版权锚定）
 
 _电子羊 - 像人一样思考，像人一样记忆。_  
 _宁夏未必科幻文化有限公司，一帆原创制作。_
+---
+
+## 🏛️ 架构说明 / Architecture
+
+### v2.0.0 头羊 - 羊群架构
+
+**小爪 (main)** 使用完整电子羊技能，其他 Agent 仅同步本能层规则。
+
+```
+🐑 头羊 (小爪) → 完整电子羊
+    ↓ 规则同步
+🐏 羊群 (其他 Agent) → 本能层规则
+```
+
+**同步命令**:
+```bash
+~/.openclaw/sync-instincts.sh
+~/.openclaw/verify-instincts.sh
+```
+
+详见：`README_ARCHITECTURE.md`
