@@ -36,9 +36,6 @@ show_help() {
   shepherd-scan                    - 扫描敏感数据 / Scan sensitive data
   shepherd-audit                   - 审计配置变更 / Audit config changes
   shepherd-monitor                 - 监控 Cron 频率 / Monitor Cron frequency
-  shepherd-harden                  - 安全加固 / Security hardening
-  shepherd-herd                    - 赶羊入圈 / Herd keys to secure storage ⭐
-  shepherd-score                   - 安全评分 / Security score ⭐
   shepherd-baa|baa|咩 | 咩一下 | 咩咩... - 咩一下 / Auto-fix all ⭐⭐⭐
   shepherd-consent                 - 狼皮收集授权 / Wolf pelt consent
   shepherd-update                  - 检查更新 / Check update ⭐
@@ -1011,36 +1008,6 @@ print(count)
 }
 
 # 牧羊犬 - 安全加固
-shepherd_harden() {
-    echo "🐕 **牧羊犬 - 安全加固 / Shepherd Dog - Security Hardening**"
-    echo ""
-    
-    # 1. 清理备份文件
-    echo "🗑️  清理敏感备份文件..."
-    find "$HOME/.openclaw" -name "*.bak*" -type f -delete 2>/dev/null
-    find "$HOME/.openclaw" -name "*.tmp" -type f -delete 2>/dev/null
-    echo "✅ 备份文件已清理"
-    echo ""
-    
-    # 2. 设置文件权限
-    echo "🔐 设置敏感文件权限..."
-    chmod 600 "$HOME/.openclaw/openclaw.json" 2>/dev/null && echo "✅ openclaw.json: 600"
-    chmod 700 "$HOME/.openclaw/agents" 2>/dev/null && echo "✅ agents/: 700"
-    echo ""
-    
-    # 3. 检查 API Key
-    echo "🔑 检查 API Key 存储..."
-    if grep -q "apiKey.*sk-[a-zA-Z0-9]" "$HOME/.openclaw/openclaw.json" 2>/dev/null; then
-        echo "⚠️  警告：API Key 明文存储"
-        echo "   建议：运行 shepherd-herd 赶羊入圈"
-    else
-        echo "✅ API Key 未检测到或使用环境变量"
-    fi
-    echo ""
-    
-    echo "✅ 安全加固完成"
-}
-
 # 咩一下配置文件
 BAA_CONFIG_DIR="$HOME/.openclaw/.baa-config.d"
 BAA_MAIN_CONFIG="$HOME/.openclaw/.baa-config.json"
@@ -1527,7 +1494,6 @@ shepherd_baa() {
     # 4. 检查密钥文件
     if [ ! -f "$HOME/.openclaw/.secret-key" ]; then
         echo "   ⚠️  密钥文件不存在"
-        suggestions+=("建议运行 shepherd-herd 赶羊入圈")
     else
         echo "   ✅ 密钥文件存在"
     fi
@@ -1582,7 +1548,6 @@ shepherd_baa() {
         echo "🔐 需要授权："
         for auth in "${needs_authorization[@]}"; do
             echo "   • $auth"
-            echo "     运行：shepherd-herd"
         done
         echo ""
     fi
@@ -1613,7 +1578,6 @@ shepherd_baa() {
     else
         echo "📝 下一步建议："
         echo "   1. 根据建议手动修复"
-        echo "   2. 运行 shepherd-score 查看详细评分"
         echo "   3. 再次咩一下验证修复效果"
     fi
     echo ""
@@ -1628,227 +1592,6 @@ shepherd_baa() {
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
     echo "🐑 咩~"
-}
-
-# 牧羊犬 - 安全评分
-shepherd_score() {
-    echo "🐕 **牧羊犬 - 安全报告 / Shepherd Dog - Security Report**"
-    echo ""
-    echo "📊 生成时间 / Generated: $(date -Iseconds)"
-    echo ""
-    
-    local score=100
-    local issues=()
-    
-    # 检查 1: API Key 明文
-    if grep -q "apiKey.*sk-[a-zA-Z0-9]" "$HOME/.openclaw/openclaw.json" 2>/dev/null; then
-        issues+=("🔴 API Key 明文存储")
-        score=$((score - 20))
-    else
-        echo "✅ API Key 安全存储"
-    fi
-    
-    # 检查 2: 文件权限
-    local config_perms=$(stat -f "%Lp" "$HOME/.openclaw/openclaw.json" 2>/dev/null || stat -c "%a" "$HOME/.openclaw/openclaw.json" 2>/dev/null)
-    if [ "$config_perms" != "600" ]; then
-        issues+=("🟡 配置文件权限不当 ($config_perms)")
-        score=$((score - 10))
-    else
-        echo "✅ 配置文件权限正确"
-    fi
-    
-    # 检查 3: 备份文件
-    local bak_count=$(find "$HOME/.openclaw" -name "*.bak*" -type f 2>/dev/null | wc -l)
-    if [ "$bak_count" -gt 0 ]; then
-        issues+=("🟡 发现 $bak_count 个备份文件")
-        score=$((score - 5))
-    else
-        echo "✅ 无敏感备份文件"
-    fi
-    
-    # 检查 4: Cron 频率
-    local cron_file="$HOME/.openclaw/cron/jobs.json"
-    if [ -f "$cron_file" ]; then
-        local high_freq=$(python3 -c "import json; jobs=json.load(open('$cron_file')).get('jobs',[]); print(sum(1 for j in jobs if j.get('schedule',{}).get('everyMs',999999)<300000))" 2>/dev/null || echo "0")
-        if [ "$high_freq" -gt 5 ]; then
-            issues+=("🟡 高频 Cron 任务过多 ($high_freq)")
-            score=$((score - 10))
-        else
-            echo "✅ Cron 频率正常"
-        fi
-    fi
-    
-    # 检查 5: 密钥文件
-    if [ -f "$HOME/.openclaw/.secret-key" ]; then
-        local key_perms=$(stat -f "%Lp" "$HOME/.openclaw/.secret-key" 2>/dev/null || stat -c "%a" "$HOME/.openclaw/.secret-key" 2>/dev/null)
-        if [ "$key_perms" = "400" ]; then
-            echo "✅ 密钥文件权限正确"
-        else
-            issues+=("🟡 密钥文件权限不当 ($key_perms)")
-            score=$((score - 10))
-        fi
-    fi
-    
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "📊 安全评分 / Security Score: $score/100"
-    echo ""
-    
-    if [ ${#issues[@]} -gt 0 ]; then
-        echo "⚠️  发现的问题 / Issues Found:"
-        for issue in "${issues[@]}"; do
-            echo "   $issue"
-        done
-        echo ""
-        echo "💡 建议运行：shepherd-harden 进行安全加固"
-    else
-        echo "✅ 无安全问题 / No security issues"
-    fi
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-}
-
-# 牧羊犬 - 赶羊功能（密钥迁移）
-shepherd_herd() {
-    echo "🐕 **牧羊犬 - 赶羊入圈 / Shepherd Dog - Herding Keys**"
-    echo ""
-    echo "🐑 把 API Key 安全地赶入羊圈（钥匙串 + 密钥文件）"
-    echo ""
-    
-    local config="$HOME/.openclaw/openclaw.json"
-    local secret_key="$HOME/.openclaw/.secret-key"
-    local hooks_dir="$HOME/.openclaw/hooks"
-    
-    # 1. 提取 API Key
-    echo "🔑 步骤 1/5: 提取 API Key..."
-    local api_key=$(grep -o '"apiKey": *"[^"]*"' "$config" 2>/dev/null | cut -d'"' -f4)
-    
-    if [ -z "$api_key" ]; then
-        echo "❌ 未找到 API Key"
-        return 1
-    fi
-    
-    echo "   ✅ API Key 已提取（长度：${#api_key}）"
-    echo ""
-    
-    # 2. 存储到密钥文件
-    echo "📁 步骤 2/5: 创建密钥文件..."
-    echo "$api_key" > "$secret_key"
-    chmod 400 "$secret_key"
-    echo "   ✅ 密钥文件已创建：$secret_key"
-    echo "   🔐 权限：400（只读）"
-    echo ""
-    
-    # 3. 添加到 macOS 钥匙串
-    echo "🔐 步骤 3/5: 添加到 macOS 钥匙串..."
-    if command -v security &> /dev/null; then
-        # 删除旧记录
-        security delete-generic-password -s "openclaw-api-key" 2>/dev/null || true
-        
-        # 添加新记录
-        security add-generic-password -s "openclaw-api-key" -a "api-key" -w "$api_key"
-        echo "   ✅ 已添加到 macOS 钥匙串"
-        echo "   🎯 服务名：openclaw-api-key"
-        echo "   👆 可用 Touch ID 解锁"
-    else
-        echo "   ⚠️  非 macOS 系统，跳过钥匙串"
-    fi
-    echo ""
-    
-    # 4. 创建启动钩子
-    echo "🪝 步骤 4/5: 创建启动钩子..."
-    mkdir -p "$hooks_dir"
-    cat > "$hooks_dir/load-secrets.sh" << 'HOOKEOF'
-#!/bin/bash
-# OpenClaw 敏感数据加载器
-# 版权：宁夏未必科幻文化有限公司，一帆原创制作
-
-# 从密钥文件加载
-if [ -f "$HOME/.openclaw/.secret-key" ]; then
-    export OPENCLAW_API_KEY=$(cat "$HOME/.openclaw/.secret-key")
-fi
-
-# 从钥匙串加载（macOS）
-if command -v security &> /dev/null; then
-    keychain_key=$(security find-generic-password -s "openclaw-api-key" -a "api-key" -w 2>/dev/null)
-    if [ -n "$keychain_key" ]; then
-        export OPENCLAW_API_KEY="$keychain_key"
-    fi
-fi
-HOOKEOF
-    chmod +x "$hooks_dir/load-secrets.sh"
-    echo "   ✅ 启动钩子已创建：$hooks_dir/load-secrets.sh"
-    echo ""
-    
-    # 5. 添加到 shell 启动
-    echo "📝 步骤 5/5: 添加到 shell 启动..."
-    if ! grep -q "load-secrets.sh" ~/.zshrc 2>/dev/null; then
-        echo '' >> ~/.zshrc
-        echo '# OpenClaw 敏感数据加载（牧羊犬赶羊功能）' >> ~/.zshrc
-        echo 'source ~/.openclaw/hooks/load-secrets.sh 2>/dev/null || true' >> ~/.zshrc
-        echo "   ✅ 已添加到 ~/.zshrc"
-    else
-        echo "   ⏭️  已存在，跳过"
-    fi
-    echo ""
-    
-    # 6. 创建备份
-    echo "💾 步骤 6/7: 创建配置文件备份..."
-    local backup_file="$config.bak.before-herd-$(date +%Y%m%d-%H%M%S)"
-    cp "$config" "$backup_file"
-    echo "   ✅ 备份已创建：$backup_file"
-    echo ""
-    
-    # 7. 自动移除明文 API Key
-    echo "🔐 步骤 7/7: 移除明文 API Key..."
-    
-    # 检查是否有 API Key
-    local has_api_key=$(grep -c '"apiKey": *"sk-' "$config" 2>/dev/null || echo "0")
-    
-    if [ "$has_api_key" -gt 0 ]; then
-        # 使用 Python 安全地替换（避免 sed 跨平台问题）
-        python3 << PYEOF
-import json
-import re
-
-with open('$config', 'r') as f:
-    content = f.read()
-
-# 使用正则替换所有 sk-开头的 API Key
-content = re.sub(r'"apiKey":\s*"sk-[a-zA-Z0-9]*"', '"apiKey": "\${OPENCLAW_API_KEY}"', content)
-
-with open('$config', 'w') as f:
-    f.write(content)
-
-print("   ✅ 明文 API Key 已替换为环境变量引用")
-PYEOF
-        
-        echo "   ✅ 明文 API Key 已移除"
-        echo "   📝 配置已更新为使用 \$OPENCLAW_API_KEY"
-    else
-        echo "   ⏭️  未检测到明文 API Key，跳过"
-    fi
-    echo ""
-    
-    # 清理备份文件（只保留一个）
-    echo "🗑️  清理旧备份文件..."
-    find "$(dirname "$backup_file")" -name "before-herd-*.bak" -type f -mmin +60 -delete 2>/dev/null
-    echo "   ✅ 旧备份已清理"
-    echo ""
-    
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "✅ 赶羊完成！API Key 已安全入圈 + 明文已移除"
-    echo ""
-    echo "📝 下一步："
-    echo "   1. 重启终端或运行：source ~/.zshrc"
-    echo "   2. 验证：echo \$OPENCLAW_API_KEY"
-    echo "   3. 验证配置：openclaw gateway status"
-    echo ""
-    echo "🔐 安全提示："
-    echo "   - 密钥文件：$secret_key (400 权限)"
-    echo "   - 钥匙串：openclaw-api-key (Touch ID 保护)"
-    echo "   - 启动钩子：$hooks_dir/load-secrets.sh"
-    echo "   - 配置文件：已使用环境变量引用"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 }
 
 # ============= 主入口 =============
@@ -1889,18 +1632,6 @@ main() {
         
         shepherd-monitor)
             shepherd_monitor "$@"
-            ;;
-        
-        shepherd-harden)
-            shepherd_harden "$@"
-            ;;
-        
-        shepherd-herd)
-            shepherd_herd "$@"
-            ;;
-        
-              shepherd-score)
-            shepherd_score "$@"
             ;;
         
         # 咩一下指令（特殊命令 + 连续字符模式）
