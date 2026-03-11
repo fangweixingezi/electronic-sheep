@@ -36,6 +36,7 @@ show_help() {
   shepherd-scan                    - 扫描敏感数据 / Scan sensitive data
   shepherd-audit                   - 审计配置变更 / Audit config changes
   shepherd-monitor                 - 监控 Cron 频率 / Monitor Cron frequency
+  shepherd-harden                  - 安全加固 / Security hardening
 
 **显意识命令 / Conscious Commands**:
   /conscious status                - 查看显意识状态 / Check conscious status
@@ -936,6 +937,37 @@ print(count)
     fi
 }
 
+# 牧羊犬 - 安全加固
+shepherd_harden() {
+    echo "🐕 **牧羊犬 - 安全加固 / Shepherd Dog - Security Hardening**"
+    echo ""
+    
+    # 1. 清理备份文件
+    echo "🗑️  清理敏感备份文件..."
+    find "$HOME/.openclaw" -name "*.bak*" -type f -delete 2>/dev/null
+    find "$HOME/.openclaw" -name "*.tmp" -type f -delete 2>/dev/null
+    echo "✅ 备份文件已清理"
+    echo ""
+    
+    # 2. 设置文件权限
+    echo "🔐 设置敏感文件权限..."
+    chmod 600 "$HOME/.openclaw/openclaw.json" 2>/dev/null && echo "✅ openclaw.json: 600"
+    chmod 700 "$HOME/.openclaw/agents" 2>/dev/null && echo "✅ agents/: 700"
+    echo ""
+    
+    # 3. 检查 API Key
+    echo "🔑 检查 API Key 存储..."
+    if grep -q "apiKey.*sk-[a-zA-Z0-9]" "$HOME/.openclaw/openclaw.json" 2>/dev/null; then
+        echo "⚠️  警告：API Key 明文存储"
+        echo "   建议：使用环境变量 OPENCLAW_API_KEY"
+    else
+        echo "✅ API Key 未检测到或使用环境变量"
+    fi
+    echo ""
+    
+    echo "✅ 安全加固完成"
+}
+
 # ============= 主入口 =============
 
 main() {
@@ -974,6 +1006,10 @@ main() {
         
         shepherd-monitor)
             shepherd_monitor "$@"
+            ;;
+        
+        shepherd-harden)
+            shepherd_harden "$@"
             ;;
         
         # 命令包装
