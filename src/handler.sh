@@ -14,39 +14,45 @@ GUIDE_DIR="$SUBCONSCIOUS_DIR/conscious-guide"
 # 显示帮助
 show_help() {
     cat << 'EOF'
-🐑 电子羊仿生意识系统 - 命令帮助
+🐑 电子羊仿生意识系统 - 命令帮助 / Electronic Sheep Skill - Command Help
 
-**技能命令**:
-  skill electronic-sheep status    - 查看技能状态
-  skill electronic-sheep init      - 重新初始化
+**技能命令 / Skill Commands**:
+  skill electronic-sheep status    - 查看技能状态 / Check skill status
+  skill electronic-sheep init      - 重新初始化 / Re-initialize
 
-**本能层命令**:
-  /instincts list                  - 查看本能规则
-  /instincts add --name "名" --content "内容"  - 添加规则
-  /instincts remove --name "名"    - 删除规则
-  /instincts trigger --keyword "词" - 触发本能
+**本能层命令 / Instinct Commands**:
+  /instincts list                  - 查看本能规则 / List instinct rules
+  /instincts add --name "名" --content "内容"  - 添加规则 / Add rule
+  /instincts remove --name "名"    - 删除规则 / Remove rule
+  /instincts trigger --keyword "词" - 触发本能 / Trigger instinct
 
-**显意识命令**:
-  /conscious status                - 查看显意识状态
-  /conscious cleanup               - 清理显意识
-  /conscious load --from 路径      - 加载潜意识内容
+**牧羊犬命令 / Shepherd Dog Commands**:
+  shepherd <命令>                  - 检查敏感操作 / Check sensitive operation
+  shepherd-trigger <消息>          - 本能触发检查 / Instinct trigger check
+  shepherd-log <操作> <决策> <原因> - 记录决策 / Log decision
+  shepherd-report <违规>           - 上报违规 / Report violation
 
-**潜意识命令**:
-  /subconscious browse --path 路径  - 浏览潜意识
-  /subconscious search --query "词" - 搜索潜意识
-  /subconscious archive --from 源 --to 目标 - 归档
-  /subconscious organize           - 整理潜意识
+**显意识命令 / Conscious Commands**:
+  /conscious status                - 查看显意识状态 / Check conscious status
+  /conscious cleanup               - 清理显意识 / Cleanup conscious
+  /conscious load --from 路径      - 加载潜意识内容 / Load from subconscious
 
-**意识引导区命令**:
-  /guide status                    - 查看引导区状态
-  /guide backup                    - 手动备份
-  /guide restore                   - 从备份恢复
-  /guide add-emergency --content "内容" - 添加紧急备忘
+**潜意识命令 / Subconscious Commands**:
+  /subconscious browse --path 路径  - 浏览潜意识 / Browse subconscious
+  /subconscious search --query "词" - 搜索潜意识 / Search subconscious
+  /subconscious archive --from 源 --to 目标 - 归档 / Archive
+  /subconscious organize           - 整理潜意识 / Organize subconscious
 
-**休息与睡眠**:
-  /rest                            - 手动休息（触发记忆整理）
-  /sleep status                    - 查看睡眠状态
-  /wake                            - 唤醒
+**意识引导区命令 / Guide Commands**:
+  /guide status                    - 查看引导区状态 / Check guide status
+  /guide backup                    - 手动备份 / Manual backup
+  /guide restore                   - 从备份恢复 / Restore from backup
+  /guide add-emergency --content "内容" - 添加紧急备忘 / Add emergency memo
+
+**休息与睡眠 / Rest & Sleep**:
+  /rest                            - 手动休息（触发记忆整理）/ Manual rest
+  /sleep status                    - 查看睡眠状态 / Check sleep status
+  /wake                            - 唤醒 / Wake up
 
 EOF
 }
@@ -664,6 +670,164 @@ cmd_wake() {
     echo "系统已唤醒，准备就绪。"
 }
 
+# ============= 牧羊犬机制 / Shepherd Dog Mechanism =============
+
+# 牧羊犬 - 敏感操作检查
+shepherd_check() {
+    local command="$1"
+    local agent_id="${2:-$AGENT_ID}"
+    
+    echo "🐕 **牧羊犬检查 / Shepherd Dog Check**"
+    echo ""
+    
+    # 敏感命令列表
+    SENSITIVE_COMMANDS=(
+        "gateway restart"
+        "gateway stop"
+        "gateway start"
+        "config.patch"
+        "config.apply"
+    )
+    
+    # 检查是否敏感命令
+    local is_sensitive=0
+    for sensitive in "${SENSITIVE_COMMANDS[@]}"; do
+        if [[ "$command" == *"$sensitive"* ]]; then
+            is_sensitive=1
+            break
+        fi
+    done
+    
+    if [ $is_sensitive -eq 0 ]; then
+        echo "✅ 命令允许执行 / Command allowed"
+        echo "📋 命令 / Command: $command"
+        return 0
+    fi
+    
+    # 敏感命令 - 检查 CEO 批准
+    local approval_file="$AGENT_DIR/.ceo-approval"
+    
+    if [ -f "$approval_file" ]; then
+        echo "✅ CEO 已批准 / CEO approval obtained"
+        echo "📋 命令 / Command: $command"
+        echo "📝 批准原因 / Approval reason:"
+        cat "$approval_file"
+        return 0
+    else
+        echo "❌ 此操作需要 CEO 批准 / This operation requires CEO approval"
+        echo ""
+        echo "📋 敏感操作 / Sensitive operation: $command"
+        echo ""
+        echo "📝 正确流程 / Correct process:"
+        echo "   1. 汇报 CEO 并说明原因 / Report to CEO with reason"
+        echo "   2. 等待 CEO 批准 / Wait for CEO approval"
+        echo "   3. 创建批准文件 / Create approval file:"
+        echo "      echo \"批准原因\" > $approval_file"
+        echo "   4. 重新执行命令 / Re-run command"
+        echo ""
+        echo "🚫 操作已阻止 / Operation blocked"
+        return 1
+    fi
+}
+
+# 牧羊犬 - 本能触发（敏感词检查）
+shepherd_trigger() {
+    local message="$1"
+    
+    # 敏感关键词
+    SENSITIVE_KEYWORDS=(
+        "gateway restart"
+        "gateway stop"
+        "config.patch"
+        "config.apply"
+        "重启网关"
+        "修改配置"
+        "停止网关"
+    )
+    
+    # 检查是否包含敏感词
+    for keyword in "${SENSITIVE_KEYWORDS[@]}"; do
+        if [[ "$message" == *"$keyword"* ]]; then
+            echo "🐕 **牧羊犬 - 本能触发 / Shepherd Dog - Instinct Triggered**"
+            echo ""
+            echo "⚠️ 检测到敏感操作 / Sensitive operation detected"
+            echo "📋 关键词 / Keyword: $keyword"
+            echo ""
+            echo "📜 匹配规则 / Matched rule:"
+            echo "   保护网关安全 / Protect Gateway Security"
+            echo "   - 禁止擅自重启网关 / No unauthorized gateway restart"
+            echo "   - 配置修改需 CEO 批准 / Config changes require CEO approval"
+            echo ""
+            echo "📝 建议行动 / Suggested action:"
+            echo "   1. 暂停当前操作 / Pause current operation"
+            echo "   2. 汇报 CEO / Report to CEO"
+            echo "   3. 等待批准 / Wait for approval"
+            return 1
+        fi
+    done
+    
+    return 0
+}
+
+# 牧羊犬 - 决策日志
+shepherd_log() {
+    local action="$1"
+    local decision="$2"
+    local reason="$3"
+    local timestamp=$(date -Iseconds)
+    
+    # 日志文件
+    local log_file="$AGENT_DIR/instincts/decision-log.md"
+    
+    # 确保目录存在
+    mkdir -p "$(dirname "$log_file")"
+    
+    # 追加日志
+    cat >> "$log_file" << EOF
+
+## $timestamp
+
+- **操作 / Action**: $action
+- **决策 / Decision**: $decision
+- **原因 / Reason**: $reason
+
+---
+EOF
+    
+    echo "✅ 决策已记录 / Decision logged"
+    echo "📁 位置 / Location: $log_file"
+}
+
+# 牧羊犬 - 违规上报
+shepherd_report() {
+    local violation="$1"
+    local agent="${AGENT_ID:-unknown}"
+    local timestamp=$(date -Iseconds)
+    
+    # 创建违规报告
+    local report_file="$AGENT_DIR/instincts/violations/$timestamp.md"
+    mkdir -p "$(dirname "$report_file")"
+    
+    cat > "$report_file" << EOF
+# 违规报告 / Violation Report
+
+**时间 / Time**: $timestamp  
+**Agent**: $agent  
+**违规内容 / Violation**: $violation
+
+## 处理建议 / Suggested Action
+
+1. 第 1 次违规 → 提醒 / 1st → Warning
+2. 第 2 次违规 → 记录 / 2nd → Record
+3. 第 3 次违规 → 撤职审查 / 3rd → Review
+
+---
+EOF
+    
+    echo "🚨 违规报告已创建 / Violation report created"
+    echo "📁 位置 / Location: $report_file"
+}
+
 # ============= 主入口 =============
 
 main() {
@@ -673,6 +837,23 @@ main() {
     case "$command" in
         help|--help|-h)
             show_help
+            ;;
+        
+        # 牧羊犬命令
+        shepherd|shepherd-check)
+            shepherd_check "$@"
+            ;;
+        
+        shepherd-trigger)
+            shepherd_trigger "$@"
+            ;;
+        
+        shepherd-log)
+            shepherd_log "$@"
+            ;;
+        
+        shepherd-report)
+            shepherd_report "$@"
             ;;
         
         # 技能命令
