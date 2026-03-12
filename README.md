@@ -1,6 +1,6 @@
 # 🐑 Electronic Sheep Skill / 电子羊技能
 
-**版本 / Version**: v2.7.1 (QMD+MCPorter Memory System)  
+**版本 / Version**: v2.7.1 (QMD+MCPorter Memory System + Confidentiality)  
 **版权 / Copyright**: © 2026 宁夏未必科幻文化有限公司，一帆原创制作
 
 > 🐑 **像人一样思考，像人一样记忆**  
@@ -74,6 +74,12 @@
 - ✅ **全局默认**: 新创建的Agent自动继承电子羊配置
 - ✅ **批量更新**: 一键更新所有现有Agent的电子羊版本
 - ✅ **状态同步**: 所有Agent保持相同版本和配置
+
+#### **通用保密等级系统 (NEW!)**
+- ✅ **L0-L4标准模型**: 公开/内部/机密/高度机密/绝密
+- ✅ **多租户支持**: 适用于任何组织架构
+- ✅ **动态访问控制**: 基于用户权限自动过滤内容
+- ✅ **新员工Agent**: `confidentiality-designer` 专门维护保密系统
 
 ---
 
@@ -190,6 +196,14 @@ shepherd-report <违规>           # 上报违规 / Report violation
 /sheep config                   # 查看和修改配置 / View and modify configuration
 ```
 
+### 保密系统命令 / Confidentiality System Commands
+
+```bash
+/confidentiality level <level>   # 设置内容保密等级 / Set content confidentiality level
+/confidentiality check <user> <content> # 检查用户访问权限 / Check user access rights
+/confidentiality audit           # 生成安全审计报告 / Generate security audit report
+```
+
 ---
 
 ## 📊 架构文档 / Architecture Documentation
@@ -243,13 +257,15 @@ echo "批准原因 / Approval reason" > ~/.openclaw/agents/<agent-id>/.ceo-appro
 
 ## 📝 更新日志 / Changelog
 
-### v2.7.1 (2026-03-12) - QMD+MCPorter Memory System
+### v2.7.1 (2026-03-12) - QMD+MCPorter Memory System + Confidentiality
 - ✅ **QMD+MCPorter 记忆系统**: 智能分层存储 + 热度算法
 - ✅ **多语言交互**: 自动检测 + 手动切换 + 多语言模式
 - ✅ **用户配置向导**: 安装时交互式配置
 - ✅ **无感更新系统**: 零停机 + 自动检查 + 安全回滚
 - ✅ **智能配置保护**: 用户设置永不覆盖
 - ✅ **全员部署机制**: 全局默认 + 批量更新
+- ✅ **通用保密等级系统**: L0-L4标准模型 + 多租户支持
+- ✅ **新员工Agent**: `confidentiality-designer` 保密系统设计师
 
 ### v2.1.0 (2026-03-11) - 🐕 牧羊犬 / Shepherd Dog
 - ✅ 牧羊犬机制 / Shepherd Dog Mechanism

@@ -1,51 +1,46 @@
-# 电子羊架构演进路线图
+# Electronic Sheep Architecture Documentation
 
-## 🎯 当前版本 v2.7.1
-- QMD+MCPorter 记忆系统
-- 智能分层存储 + 热度算法  
-- 多语言交互 + 全员部署
-- 无感更新 + 配置保护
+## Core Components
 
-## 🔮 未来演进方向
+### Memory System (v2.7.1)
+- **QMD+MCPorter Integration**: Vector-based memory with intelligent layering
+- **Heat Algorithm**: Access frequency (40%) + Freshness (30%) + Relevance (20%) + User rating (10%)
+- **Multi-language Support**: Auto-detection + manual switching + multi-language mode
+- **Intelligent Configuration Protection**: User settings never overwritten
 
-### **v3.0 Serverless架构**
-- **目标**: 云原生部署，弹性扩缩容
-- **特性**: 
-  - 无服务器架构
-  - 按需资源分配
-  - 成本优化
-  - 自动扩缩容
+### Confidentiality System (New in v2.7.1)
+- **Universal L0-L4 Model**: Public → Internal → Confidential → Highly Confidential → Top Secret
+- **Multi-tenant Ready**: Works for any organization, not tied to specific architecture
+- **Dynamic Access Control**: Automatic content filtering based on user clearance
+- **Role-based Permissions**: Admin, User, Security Officer, Guest roles
+- **Custom Labels**: Users can create their own confidentiality tags
 
-### **v4.0 量子场理论**  
-- **目标**: 基于信息熵的主动记忆管理
-- **特性**:
-  - 信息熵地图预判熵增
-  - 提前分配Agent整理记忆
-  - 主动记忆优化
-  - 量子叠加状态管理
+### Agent Management
+- **Global Deployment**: All agents automatically inherit electronic sheep configuration
+- **New Agent Auto-config**: New agents automatically get electronic sheep enabled
+- **Version Management**: Safe rollback to 3 recent versions + 1 major version
+- **Seamless Updates**: Zero-downtime updates with automatic health checks
 
-### **v5.0 熵驱动架构**
-- **目标**: 基于热力学第二定律的记忆系统
-- **特性**:
-  - 熵增原理指导记忆整理
-  - 自动识别高熵信息区域
-  - 智能降熵操作
-  - 记忆系统的自组织能力
+### Team Structure
+- **Head Sheep**: Main agent with full electronic sheep capabilities
+- **Flock**: Other agents with simplified electronic sheep
+- **Shepherd Dog**: Instinct guardian with system prompt injection
+- **Confidentiality Designer**: New role dedicated to confidentiality system research and maintenance
 
-## 📊 技术指标演进
+## Future Roadmap (Internal Only)
 
-| 版本 | 架构 | 并发能力 | 资源占用 | 智能程度 |
-|------|------|----------|----------|----------|
-| v2.7.1 | MCP服务器 | 17+ Agent | 极低 | 企业级 |
-| v3.0 | Serverless | 无限扩展 | 按需 | 云原生 |
-| v4.0 | 量子场 | 动态分配 | 优化 | 预测性 |
-| v5.0 | 熵驱动 | 自组织 | 最优 | 自主性 |
+### v3.0 Serverless Architecture
+- Cloud-native deployment
+- Elastic scaling
+- Cost optimization
 
-## 🚀 开发优先级
-1. **短期**: 完善v2.7.1稳定性
-2. **中期**: 探索v3.0 Serverless可行性  
-3. **长期**: 研究v4.0/v5.0理论基础
+### v4.0 Quantum Field Theory  
+- Information entropy mapping
+- Proactive memory organization
+- Entropy-driven AI allocation
 
----
-*记录时间: 2026-03-12*
-*负责人: 一帆 (CEO)*
+### v5.0 Entropy-driven System
+- Entropy-based intelligent memory management
+- Automatic high-entropy information identification and organization
+
+*Note: Future roadmap is confidential and not included in public documentation*
