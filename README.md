@@ -1,6 +1,6 @@
 # 🐑 Electronic Sheep Skill / 电子羊技能
 
-**版本 / Version**: v2.1.0 (Shepherd Dog / 牧羊犬)  
+**版本 / Version**: v2.7.1 (QMD+MCPorter Memory System)  
 **版权 / Copyright**: © 2026 宁夏未必科幻文化有限公司，一帆原创制作
 
 > 🐑 **像人一样思考，像人一样记忆**  
@@ -55,6 +55,25 @@
 | **本能触发** | 敏感词自动触发警告 / Sensitive keywords trigger warnings |
 | **决策日志** | 所有敏感操作可追溯 / All sensitive operations traceable |
 | **违规上报** | 自动创建违规报告 / Automatic violation reports |
+
+### 🚀 v2.7.1 新功能 / New Features in v2.7.1
+
+#### **QMD+MCPorter 记忆系统**
+- ✅ **智能分层存储**: 短期(7天)/长期(7-90天)/舍弃层(90天+)
+- ✅ **热度算法**: 访问频率(40%) + 新鲜度(30%) + 关联度(20%) + 用户评分(10%)
+- ✅ **多语言交互**: 自动检测系统语言，支持中英文无缝切换
+- ✅ **用户配置向导**: 新用户安装时交互式配置
+
+#### **无感更新系统**
+- ✅ **零停机更新**: 服务持续运行，无缝切换版本
+- ✅ **自动检查**: 每日23:00自动检查GitHub更新
+- ✅ **安全回滚**: 支持3个近期版本 + 1个重大版本回退
+- ✅ **智能配置保护**: 用户自定义设置永不被覆盖
+
+#### **全员部署机制**
+- ✅ **全局默认**: 新创建的Agent自动继承电子羊配置
+- ✅ **批量更新**: 一键更新所有现有Agent的电子羊版本
+- ✅ **状态同步**: 所有Agent保持相同版本和配置
 
 ---
 
@@ -116,6 +135,13 @@ bash ~/.openclaw/agents/<agent-id>/skills/electronic-sheep/scripts/init.sh ~/.op
    - 配置修改需 CEO 批准
    - Config changes require CEO approval
 
+4. **危险操作前必须验证命令语法 / Verify Command Syntax Before Dangerous Operations**
+   - 触发本能或条件反射时，用户同意执行危险操作前，必须：
+     1. 获取最新帮助: `openclaw help`
+     2. 验证具体命令: `openclaw <command> --help`
+     3. 确认语法正确
+     4. 执行后验证状态
+
 ---
 
 ## 🛠️ 命令参考 / Command Reference
@@ -153,6 +179,15 @@ shepherd-report <违规>           # 上报违规 / Report violation
 /subconscious search --query "词" # 搜索潜意识 / Search subconscious
 /subconscious archive --from 源 --to 目标 # 归档 / Archive
 /subconscious organize           # 整理潜意识 / Organize subconscious
+```
+
+### 电子羊更新命令 / Electronic Sheep Update Commands
+
+```bash
+/sheep update                    # 检查并更新到最新版本 / Check and update to latest version
+/sheep rollback <version>       # 回滚到指定版本 / Rollback to specified version
+/sheep status                   # 查看当前版本和状态 / Check current version and status
+/sheep config                   # 查看和修改配置 / View and modify configuration
 ```
 
 ---
@@ -207,6 +242,14 @@ echo "批准原因 / Approval reason" > ~/.openclaw/agents/<agent-id>/.ceo-appro
 ---
 
 ## 📝 更新日志 / Changelog
+
+### v2.7.1 (2026-03-12) - QMD+MCPorter Memory System
+- ✅ **QMD+MCPorter 记忆系统**: 智能分层存储 + 热度算法
+- ✅ **多语言交互**: 自动检测 + 手动切换 + 多语言模式
+- ✅ **用户配置向导**: 安装时交互式配置
+- ✅ **无感更新系统**: 零停机 + 自动检查 + 安全回滚
+- ✅ **智能配置保护**: 用户设置永不覆盖
+- ✅ **全员部署机制**: 全局默认 + 批量更新
 
 ### v2.1.0 (2026-03-11) - 🐕 牧羊犬 / Shepherd Dog
 - ✅ 牧羊犬机制 / Shepherd Dog Mechanism
