@@ -1,46 +1,77 @@
-# Electronic Sheep Architecture Documentation
+# 🐑 Electronic Sheep Architecture Documentation
 
-## Core Components
+## 📋 目录
+- [核心架构](#核心架构)
+- [记忆系统](#记忆系统)  
+- [保密等级系统](#保密等级系统)
+- [通信成本问题](#通信成本问题)
+- [未来演进方向](#未来演进方向)
 
-### Memory System (v2.7.1)
-- **QMD+MCPorter Integration**: Vector-based memory with intelligent layering
-- **Heat Algorithm**: Access frequency (40%) + Freshness (30%) + Relevance (20%) + User rating (10%)
-- **Multi-language Support**: Auto-detection + manual switching + multi-language mode
-- **Intelligent Configuration Protection**: User settings never overwritten
+## 核心架构
 
-### Confidentiality System (New in v2.7.1)
-- **Universal L0-L4 Model**: Public → Internal → Confidential → Highly Confidential → Top Secret
-- **Multi-tenant Ready**: Works for any organization, not tied to specific architecture
-- **Dynamic Access Control**: Automatic content filtering based on user clearance
-- **Role-based Permissions**: Admin, User, Security Officer, Guest roles
-- **Custom Labels**: Users can create their own confidentiality tags
+### 🏛️ 三层架构模型
+```
+🐑 头羊 (Head Sheep) - 小爪 (main)
+   完整电子羊技能 / Full Electronic Sheep Skill
+   ↓ 规则同步 / Rule Sync
+🐏 羊群 (Flock) - 其他 16 个 Agent 
+   简化电子羊技能 / Simplified Electronic Sheep Skill
+   ↓ 规则守护 / Rule Guard
+🐕 牧羊犬 (Shepherd Dog) - 本能守护者 / Instinct Guardian
+   System Prompt + 敏感操作检查 + 决策日志 + 违规上报
+```
 
-### Agent Management
-- **Global Deployment**: All agents automatically inherit electronic sheep configuration
-- **New Agent Auto-config**: New agents automatically get electronic sheep enabled
-- **Version Management**: Safe rollback to 3 recent versions + 1 major version
-- **Seamless Updates**: Zero-downtime updates with automatic health checks
+## 记忆系统
 
-### Team Structure
-- **Head Sheep**: Main agent with full electronic sheep capabilities
-- **Flock**: Other agents with simplified electronic sheep
-- **Shepherd Dog**: Instinct guardian with system prompt injection
-- **Confidentiality Designer**: New role dedicated to confidentiality system research and maintenance
+### 🧠 QMD+MCPorter 架构
+- **智能分层**: 短期(14天)/长期(180天)/舍弃层(180天+)
+- **热度算法**: 访问频率(40%) + 新鲜度(30%) + 关联度(20%) + 用户评分(10%)
+- **多语言支持**: 自动检测系统语言，支持中英文无缝切换
+- **无感更新**: 零停机升级，支持安全回滚
 
-## Future Roadmap (Internal Only)
+## 保密等级系统
 
-### v3.0 Serverless Architecture
-- Cloud-native deployment
-- Elastic scaling
-- Cost optimization
+### 🔒 L0-L4 通用保密模型
+- **L0 公开**: 任何人都可访问
+- **L1 内部**: 组织内部成员  
+- **L2 机密**: 授权用户
+- **L3 高度机密**: 特定角色/部门
+- **L4 绝密**: 最小权限原则
 
-### v4.0 Quantum Field Theory  
-- Information entropy mapping
-- Proactive memory organization
-- Entropy-driven AI allocation
+## 通信成本问题
 
-### v5.0 Entropy-driven System
-- Entropy-based intelligent memory management
-- Automatic high-entropy information identification and organization
+### 🎯 核心问题识别
+**当前状态**: Agent间1对1通信模式导致高成本、低效率
 
-*Note: Future roadmap is confidential and not included in public documentation*
+**根本问题**:
+1. **成本过高**: 每次通信都需要网关调用和完整上下文传输
+2. **缺乏群体智能**: 没有真正的集体对话机制  
+3. **平台依赖**: 通信绑定特定平台，无法实现Agent自主能力
+4. **扩展性差**: Agent数量增加时成本呈指数级增长
+
+### 🎯 根本需求
+1. **Agent基本能力**: 每个Agent都应该具备在集体中智能对话的内在能力
+2. **成本效益**: 通信成本应该与价值成正比，避免浪费  
+3. **平台无关**: 通信机制不应该依赖特定通讯软件
+4. **可扩展性**: 系统应该能支持任意数量的Agent协作
+
+### 💡 解决方案探索
+- **虚拟会议室**: 创建共享空间，实现群体通信
+- **多普勒效应**: 引入距离和相对速度概念，动态调整信息密度
+- **量子涨落架构**: 基于信息熵地图的预判分配机制
+- **共享上下文池**: 避免重复上下文传输，大幅降低成本
+
+## 未来演进方向
+
+### 🚀 架构演进路线
+- **v1.0**: 独立Agent模式
+- **v2.6**: 咩一下安全检查  
+- **v2.7**: QMD+MCPorter记忆系统 + 通用保密等级
+- **v3.0**: Serverless架构
+- **v4.0**: 量子场理论（信息熵地图）
+- **v5.0**: 熵驱动（预判熵增，提前分配）
+
+### 🎯 成本优化目标
+- **查表法**: 90%成本节省
+- **分工协作**: 75%成本节省  
+- **量子叠加**: 50%成本节省
