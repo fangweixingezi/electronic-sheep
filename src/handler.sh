@@ -1440,6 +1440,26 @@ shepherd_baa_stats() {
 
 # 牧羊犬 - 咩一下 / Baa - 一键自动安全修复
 shepherd_baa() {
+    # 异步咩一下 - 立即返回幽默回复，后台深度检查
+    local BAA_SCRIPT="$(dirname "$0")/shepherd-baa-async.js"
+    
+    if [ -f "$BAA_SCRIPT" ]; then
+        node "$BAA_SCRIPT"
+    else
+        echo "🐑 **咩一下 / Baa**"
+        echo ""
+        echo "🎉 系统似乎好像大概或许看起来很棒！"
+        echo ""
+        echo "电子羊的直觉告诉我……"
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo ""
+        echo "🐑 咩~"
+    fi
+}
+
+shepherd_baa_full() {
+    # 完整版咩一下（保留原有功能）
     echo "🐑 **咩一下 / Baa - 一键自动安全修复**"
     echo ""
     echo "🐕 电子羊正在全面检查系统安全..."
