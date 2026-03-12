@@ -1,77 +1,53 @@
-# 🐑 Electronic Sheep Architecture Documentation
+# Electronic Sheep Architecture Documentation
 
-## 📋 目录
-- [核心架构](#核心架构)
-- [记忆系统](#记忆系统)  
-- [保密等级系统](#保密等级系统)
-- [通信成本问题](#通信成本问题)
-- [未来演进方向](#未来演进方向)
+## Core Components
 
-## 核心架构
+### Memory System v2.7.1
+- QMD+MCPorter integration for intelligent memory management
+- Multi-language support with automatic language detection
+- Intelligent configuration protection and seamless updates
+- Global deployment mechanism for all agents
 
-### 🏛️ 三层架构模型
-```
-🐑 头羊 (Head Sheep) - 小爪 (main)
-   完整电子羊技能 / Full Electronic Sheep Skill
-   ↓ 规则同步 / Rule Sync
-🐏 羊群 (Flock) - 其他 16 个 Agent 
-   简化电子羊技能 / Simplified Electronic Sheep Skill
-   ↓ 规则守护 / Rule Guard
-🐕 牧羊犬 (Shepherd Dog) - 本能守护者 / Instinct Guardian
-   System Prompt + 敏感操作检查 + 决策日志 + 违规上报
-```
+### Confidentiality System v2.7.1  
+- Universal L0-L4 confidentiality levels (Public/Internal/Confidential/Highly Confidential/Top Secret)
+- Multi-tenant support for any organization
+- Dynamic access control and automatic redaction
+- Customizable labels and inheritance mechanisms
 
-## 记忆系统
+### Agent Management
+- 12-member Electronic Sheep Department with specialized roles
+- Automatic configuration for new agents
+- Version rollback support (3 recent versions + 1 major version)
+- Enterprise-grade security and audit capabilities
 
-### 🧠 QMD+MCPorter 架构
-- **智能分层**: 短期(14天)/长期(180天)/舍弃层(180天+)
-- **热度算法**: 访问频率(40%) + 新鲜度(30%) + 关联度(20%) + 用户评分(10%)
-- **多语言支持**: 自动检测系统语言，支持中英文无缝切换
-- **无感更新**: 零停机升级，支持安全回滚
+## Future Development
 
-## 保密等级系统
+### Research Areas
+- Advanced group communication mechanisms
+- Cost optimization for multi-agent systems  
+- Platform-independent collaboration frameworks
+- Scalable agent coordination architectures
 
-### 🔒 L0-L4 通用保密模型
-- **L0 公开**: 任何人都可访问
-- **L1 内部**: 组织内部成员  
-- **L2 机密**: 授权用户
-- **L3 高度机密**: 特定角色/部门
-- **L4 绝密**: 最小权限原则
+### Implementation Strategy
+- Problem-focused approach: solve core issues first
+- Incremental evolution: start simple, then enhance
+- Security-first: sensitive research kept internal only
+- Community-friendly: public documentation focuses on general solutions
 
-## 通信成本问题
+## Integration Guidelines
 
-### 🎯 核心问题识别
-**当前状态**: Agent间1对1通信模式导致高成本、低效率
+### OpenClaw Setup
+- Configure QMD backend with MCPorter server
+- Enable global deployment for team-wide consistency  
+- Set appropriate confidentiality levels based on use case
+- Implement proper backup and rollback procedures
 
-**根本问题**:
-1. **成本过高**: 每次通信都需要网关调用和完整上下文传输
-2. **缺乏群体智能**: 没有真正的集体对话机制  
-3. **平台依赖**: 通信绑定特定平台，无法实现Agent自主能力
-4. **扩展性差**: Agent数量增加时成本呈指数级增长
+### Best Practices
+- Use recommended configurations for optimal performance
+- Regular version updates with manual approval
+- Monitor system health through built-in diagnostics
+- Maintain clear separation between public and internal documentation
 
-### 🎯 根本需求
-1. **Agent基本能力**: 每个Agent都应该具备在集体中智能对话的内在能力
-2. **成本效益**: 通信成本应该与价值成正比，避免浪费  
-3. **平台无关**: 通信机制不应该依赖特定通讯软件
-4. **可扩展性**: 系统应该能支持任意数量的Agent协作
+---
 
-### 💡 解决方案探索
-- **虚拟会议室**: 创建共享空间，实现群体通信
-- **多普勒效应**: 引入距离和相对速度概念，动态调整信息密度
-- **量子涨落架构**: 基于信息熵地图的预判分配机制
-- **共享上下文池**: 避免重复上下文传输，大幅降低成本
-
-## 未来演进方向
-
-### 🚀 架构演进路线
-- **v1.0**: 独立Agent模式
-- **v2.6**: 咩一下安全检查  
-- **v2.7**: QMD+MCPorter记忆系统 + 通用保密等级
-- **v3.0**: Serverless架构
-- **v4.0**: 量子场理论（信息熵地图）
-- **v5.0**: 熵驱动（预判熵增，提前分配）
-
-### 🎯 成本优化目标
-- **查表法**: 90%成本节省
-- **分工协作**: 75%成本节省  
-- **量子叠加**: 50%成本节省
+*Note: Detailed internal research and sensitive architectural discussions are maintained in private documentation only.*
