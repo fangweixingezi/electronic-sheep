@@ -1,19 +1,43 @@
-# 电子羊 Skill v2.7.1 - 面具模式更新
+# 电子羊 Skill v2.7.1 - 更新日志
 
 **版本**: v2.7.1  
 **日期**: 2026-03-13  
-**作者**: 小爪 (COO) / 一帆 (CEO)
+**作者**: 电子羊部
 
 ---
 
-## 🎭 核心概念：面具模式
+## 🎯 核心功能
 
-电子羊 Skill 不是独立实体，而是 **Agent 的面具**。
+### 1. 咩里咩气的表达风格
+- 牧草/虫/羊圈的比喻
+- 出勤率、摸鱼等拟人化表达
+- 狼来了表示高危问题
+- 句尾加"咩~"
 
-- Agent 戴上面具后咩里咩气地说话
-- 所有修复都是 Agent 戴着面具自己修的
-- 电子羊 Skill 只负责检测和咩里咩气地报告
-- Agent 自己决定何时摘下面具
+### 2. 自然语言理解
+- 支持"继续"、"接着"等自然语言
+- 支持连续字符触发（如 666666、了了了了）
+- 支持中文连续字符
+
+### 3. 白名单机制
+- 备份文件（*.bak, *.backup, *.old）不算问题
+- 密码文件、API Key 文件、密钥文件都在白名单
+- 明文 API Key 是正常配置，不算安全问题
+
+### 4. 实际修复功能
+- 自动创建 Agent 配置文件（IDENTITY.md, SKILL.md, system-prompt.md）
+- 清除 Cron 任务错误状态
+- 高危问题不自动修（需要手动处理）
+
+### 5. 历史记录
+- 记录咩一下次数
+- 记录上次问题数和修复数
+- 根据历史记录生成个性化回复
+
+### 6. 完整性检查
+- 每次咩一下前自动检查 skill 是否有更新
+- 检测核心文件是否被篡改
+- 比对 Git 版本确保是最新版本
 
 ---
 
@@ -23,18 +47,10 @@
 - `src/shepherd-baa-check.js` - 检测阶段（牧草/虫/羊圈比喻）
 - `src/shepherd-baa-fix.js` - 修复阶段（实际执行修复）
 - `src/shepherd-natural.js` - 自然语言理解（支持连续字符触发）
-
-### 废弃文件（保留但不使用）
-- `src/shepherd-baa-async.js` - 异步版本（已废弃）
-- `src/shepherd-baa-complete.js` - 完整版（已废弃）
-- `src/shepherd-baa-feishu.js` - 飞书版（已废弃）
-- `src/shepherd-baa-full.js` - 完整版（已废弃）
-- `src/shepherd-baa-phased.js` - 分阶段版（已废弃）
-- `src/shepherd-deep-check.js` - 深度检查（已废弃）
-- `src/electronic-sheep-stdio-server.js` - MCP stdio 服务（已废弃）
+- `src/shepherd-integrity-check.js` - 完整性检查（检测更新/篡改）
 
 ### 文档
-- `README_MASK.md` - 面具模式说明
+- `CHANGELOG_V2.7.1.md` - 更新日志
 
 ---
 
@@ -165,7 +181,7 @@ _咩~ 老熟人了，随叫随到咩！_
 
 ## 🔧 技术实现
 
-### 自然语言理解
+### 1. 自然语言理解
 ```javascript
 function understandIntent(userInput) {
     // 退出触发词
@@ -174,28 +190,39 @@ function understandIntent(userInput) {
     // 继续触发词
     const continueTriggers = ['继续', '接着', '再来'];
     
-    // 修复触发词
-    const fixTriggers = ['修复', '修', 'fix'];
-    
-    // 连续字符触发
+    // 连续字符触发（支持中文）
     if (input.length >= 3 && new Set(input).size === 1) {
         return { action: 'baa' };
     }
-    
-    // ... 更多逻辑
 }
 ```
 
-### Agent 配置创建
+### 2. 完整性检查
+```javascript
+function checkCoreFiles() {
+    // 获取 Git 当前版本
+    const version = getGitVersion();
+    
+    // 获取远程最新版本
+    const remoteVersion = getRemoteVersion();
+    
+    // 检查是否有未提交的更改
+    const hasChanges = hasUncommittedChanges();
+    
+    // 检查核心文件哈希
+    coreFiles.forEach(file => {
+        result.files[file] = {
+            exists: fs.existsSync(filePath),
+            hash: getFileHash(filePath)
+        };
+    });
+}
+```
+
+### 3. Agent 配置创建
 ```javascript
 function createAgentConfig(agentName) {
-    const agentDir = path.join(HOME, '.openclaw', 'agents', agentName, 'agent');
-    
     // 创建 IDENTITY.md
-    if (!fs.existsSync(identityPath)) {
-        fs.writeFileSync(identityPath, `# ${agentName}\n\n**角色**: ${agentName}\n...`);
-    }
-    
     // 创建 SKILL.md
     // 创建 system-prompt.md
     
@@ -203,17 +230,39 @@ function createAgentConfig(agentName) {
 }
 ```
 
+### 4. Cron 错误清除
+```javascript
+function fixCronErrors(cronDetails) {
+    // 清除错误状态
+    job.state.lastRunStatus = 'ok';
+    job.state.consecutiveErrors = 0;
+    job.state.lastError = null;
+}
+```
+
+### 5. 白名单机制
+```javascript
+const WHITELIST_PATTERNS = [
+    '*.bak',
+    '*.bak.*',
+    '*.backup',
+    '*.old',
+    '.secret-key',
+    'load-secrets.sh'
+];
+```
+
 ---
 
 ## 📝 更新日志
 
 ### v2.7.1 (2026-03-13)
-- ✅ 实现面具模式架构
 - ✅ 添加自然语言理解
 - ✅ 支持中文连续字符触发
 - ✅ 实现实际修复功能
 - ✅ 添加白名单机制
 - ✅ 添加历史记录功能
+- ✅ 添加完整性检查（检测更新/篡改）
 - ✅ 优化咩里咩气的表达风格
 
 ### v2.7.0 (2026-03-12)

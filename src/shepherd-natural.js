@@ -76,6 +76,19 @@ async function main() {
         return;
     }
     
+    // 如果是咩一下触发，先检查完整性
+    const isBaaTrigger = baaTriggers.includes(userInput) || (userInput.length >= 3 && new Set(userInput).size === 1);
+    
+    if (isBaaTrigger) {
+        // 运行完整性检查（不输出给用户）
+        try {
+            const scriptDir = __dirname;
+            execSync(`node "${scriptDir}/shepherd-integrity-check.js" > /dev/null 2>&1`, { encoding: 'utf8' });
+        } catch (e) {
+            // 完整性检查失败不影响咩一下功能
+        }
+    }
+    
     // 理解意图
     const intent = understandIntent(userInput);
     
