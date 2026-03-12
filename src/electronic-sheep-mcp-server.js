@@ -1,12 +1,9 @@
+// Electronic Sheep MCP Server with Global Agent Configuration
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
-
-// Import language detector and config wizard
-const { detectUserLanguage, getLanguageConfig } = require('./electronic-sheep-language-detector');
-const { generateConfigWizard } = require('./electronic-sheep-config-wizard');
 
 const app = express();
 const PORT = 19003;
@@ -14,54 +11,61 @@ const PORT = 19003;
 app.use(cors());
 app.use(bodyParser.json());
 
+// Load global configuration
+let globalConfig = {};
+try {
+  const configPath = path.join(__dirname, 'electronic-sheep-global-config.json');
+  if (fs.existsSync(configPath)) {
+    globalConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  }
+} catch (error) {
+  console.log('No global config found, using defaults');
+}
+
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', version: '2.7.1' });
+  res.json({ 
+    status: 'ok', 
+    version: '2.7.1',
+    features: ['qmd-mcporter', 'multi-language', 'global-deployment']
+  });
 });
 
-// Language detection endpoint
-app.post('/detect-language', (req, res) => {
-  try {
-    const { userAgent, acceptLanguage, userLocale, explicitLanguage } = req.body;
-    const detectedLang = detectUserLanguage({
-      userAgent,
-      acceptLanguage,
-      userLocale,
-      explicitLanguage
-    });
-    res.json({ 
-      detectedLanguage: detectedLang,
-      config: getLanguageConfig(detectedLang)
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Config wizard endpoint
-app.post('/config-wizard', (req, res) => {
-  try {
-    const { language, context } = req.body;
-    const wizard = generateConfigWizard(language, context);
-    res.json(wizard);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Memory operations with language support
+// Memory query endpoint
 app.post('/memory/query', (req, res) => {
-  // Implementation for memory queries with language-aware responses
-  res.json({ message: 'Memory query processed', language: req.body.language || 'auto' });
+  // Implementation for memory queries
+  res.json({ results: [], provider: 'electronic-sheep-v2.7' });
+});
+
+// Agent creation webhook
+app.post('/agent/created', (req, res) => {
+  const { agentId, language } = req.body;
+  
+  // Apply global configuration to new agent
+  const agentConfig = {
+    memory: globalConfig.memory || { backend: 'qmd' },
+    language: language || globalConfig.language || 'system'
+  };
+  
+  console.log(`Applied global config to new agent: ${agentId}`);
+  res.json({ success: true, config: agentConfig });
+});
+
+// Configuration update endpoint
+app.post('/config/update', (req, res) => {
+  const { config } = req.body;
+  globalConfig = { ...globalConfig, ...config };
+  
+  // Save to file
+  fs.writeFileSync(
+    path.join(__dirname, 'electronic-sheep-global-config.json'),
+    JSON.stringify(globalConfig, null, 2)
+  );
+  
+  res.json({ success: true, message: 'Global configuration updated' });
 });
 
 app.listen(PORT, '127.0.0.1', () => {
-  console.log(`🐑 Electronic Sheep MCP Server v2.7.1 running on http://127.0.0.1:${PORT}`);
-  console.log(`🌐 Multi-language support enabled`);
-});
-
-// Handle graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('🐑 Shutting down Electronic Sheep MCP Server...');
-  process.exit(0);
+  console.log(`Electronic Sheep MCP Server v2.7.1 running on port ${PORT}`);
+  console.log('Features: QMD+MCPorter, Multi-language, Global Deployment');
 });
